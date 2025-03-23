@@ -185,7 +185,7 @@ ui <- dashboardPage(
                        numericInput("bootstrapSeed", "Seed", value = 2023),
                        numericInput("nReplications", "Number of Replications", value = 1000),
                        numericInput("bootstrapDpi", "DPI", value = 600),
-                       textInput("bootstrapPalette", "Palette", value = "FantasticFox1"),
+                       textInput("bootstrapPalette", "Palette", value = "grey"),
                        numericInput("omega_ymin_annot", "Omega Y-min Annotation", value = 0.67),
                        numericInput("omega_ymax_annot", "Omega Y-max Annotation", value = 0.70),
                        numericInput("comp_ymin_annot", "Composite Y-min Annotation", value = 0.90),
