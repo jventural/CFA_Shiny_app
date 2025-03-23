@@ -7,7 +7,7 @@ library(lavaan)          # Structural equation modeling
 library(semPlot)         # SEM visualization
 library(semTools)        # SEM analysis tools and reliability
 library(dplyr)           # Data manipulation
-library(PsyMetricTools)  # Psychometric functions (includes invertir_items)
+library(PsyMetricTools)  # Psychometric functions (incluye invertir_items, boot_cfa, boot_cfa_plot)
 library(readxl)          # Excel file reading
 library(sessioninfo)     # Para extraer información de la sesión
 library(bibtex)          # Para gestionar referencias BibTeX
@@ -44,7 +44,7 @@ ui <- dashboardPage(
                   value = "",
                   placeholder = "Enter your CFA model specification",
                   rows = 5),
-    # Botón para correr el análisis
+    # Botón para correr el análisis CFA
     actionButton("run", "Run Analysis", class = "run-analysis"),
     hr(),
     # Menú de navegación
@@ -54,6 +54,7 @@ ui <- dashboardPage(
       menuItem("Model Plot", tabName = "modelPlot", icon = icon("project-diagram")),
       menuItem("Modification Indices", tabName = "modIndices", icon = icon("wrench")),
       menuItem("Omega Reliability", tabName = "reliability", icon = icon("balance-scale")),
+      menuItem("Bootstrap CFA", tabName = "bootstrap", icon = icon("seedling")),
       menuItem("Cómo citar", tabName = "citation", icon = icon("book"))
     )
   ),
@@ -171,6 +172,31 @@ ui <- dashboardPage(
                 ),
                 column(8,
                        tableOutput("reliabilityOutput")
+                )
+              )
+      ),
+      
+      # Pestaña: Bootstrap CFA
+      tabItem(tabName = "bootstrap",
+              h2("Bootstrap CFA Analysis"),
+              fluidRow(
+                column(4,
+                       textInput("itemPrefix", "Item Prefix", value = ""),
+                       numericInput("bootstrapSeed", "Seed", value = 2023),
+                       numericInput("nReplications", "Number of Replications", value = 1000),
+                       numericInput("bootstrapDpi", "DPI", value = 600),
+                       textInput("bootstrapPalette", "Palette", value = "FantasticFox1"),
+                       numericInput("omega_ymin_annot", "Omega Y-min Annotation", value = 0.67),
+                       numericInput("omega_ymax_annot", "Omega Y-max Annotation", value = 0.70),
+                       numericInput("comp_ymin_annot", "Composite Y-min Annotation", value = 0.90),
+                       numericInput("comp_ymax_annot", "Composite Y-max Annotation", value = 0.95),
+                       numericInput("abs_ymin_annot", "Absolute Y-min Annotation", value = 0.08),
+                       numericInput("abs_ymax_annot", "Absolute Y-max Annotation", value = 0.10),
+                       br(),
+                       actionButton("runBootstrap", "Run Bootstrap", class = "btn-primary")
+                ),
+                column(8,
+                       plotOutput("bootstrapPlot")
                 )
               )
       ),
@@ -319,6 +345,51 @@ server <- function(input, output, session) {
       dev.off()
     }
   )
+  
+  # ReactiveValues para almacenar resultados del bootstrap
+  bootResults <- reactiveValues(plot = NULL, results = NULL)
+  
+  # Ejecutar el bootstrap CFA cuando se presiona el botón, con barra de progreso
+  observeEvent(input$runBootstrap, {
+    req(input$datafile, input$modelInput)
+    withProgress(message = "Ejecutando Bootstrap CFA...", value = 0, {
+      
+      incProgress(0.2, detail = "Preparando datos")
+      # Ejecutar boot_cfa utilizando los inputs correspondientes
+      results <- boot_cfa(
+        new_df = data_full(),
+        model_string = input$modelInput,
+        item_prefix = input$itemPrefix,
+        seed = input$bootstrapSeed,
+        n_replications = input$nReplications
+      )
+      
+      incProgress(0.5, detail = "Generando gráfico")
+      bootPlot <- boot_cfa_plot(
+        results, 
+        save              = FALSE, 
+        dpi               = input$bootstrapDpi, 
+        palette           = input$bootstrapPalette,
+        omega_ymin_annot  = input$omega_ymin_annot, 
+        omega_ymax_annot  = input$omega_ymax_annot,
+        comp_ymin_annot   = input$comp_ymin_annot, 
+        comp_ymax_annot   = input$comp_ymax_annot,
+        abs_ymin_annot    = input$abs_ymin_annot, 
+        abs_ymax_annot    = input$abs_ymax_annot
+      )
+      
+      incProgress(0.3, detail = "Finalizando")
+      
+      bootResults$plot <- bootPlot
+      bootResults$results <- results
+    })
+  })
+  
+  # Renderizar el gráfico del Bootstrap CFA
+  output$bootstrapPlot <- renderPlot({
+    req(bootResults$plot)
+    bootResults$plot
+  })
   
   # Mostrar las referencias en HTML en la pestaña "Cómo citar"
   output$bibReferences <- renderUI({
