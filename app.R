@@ -1,4 +1,15 @@
 # app.R
+# Verificar e instalar paquetes si no están presentes
+paquetes_necesarios <- c(
+  "shiny", "shinydashboard", "lavaan", "semPlot", "semTools", "dplyr", 
+  "PsyMetricTools", "readxl", "sessioninfo", "bibtex"
+)
+
+paquetes_faltantes <- paquetes_necesarios[!(paquetes_necesarios %in% installed.packages()[,"Package"])]
+
+if (length(paquetes_faltantes) > 0) {
+  install.packages(paquetes_faltantes, dependencies = TRUE)
+}
 
 # Cargar paquetes requeridos
 library(shiny)
@@ -196,6 +207,9 @@ ui <- dashboardPage(
                        actionButton("runBootstrap", "Run Bootstrap", class = "btn-primary")
                 ),
                 column(8,
+                       # Botón para guardar el gráfico del bootstrap con ggsave
+                       downloadButton("downloadBootstrapPlot", "Guardar Gráfico Bootstrap", class = "btn-warning"),
+                       br(), br(),
                        plotOutput("bootstrapPlot")
                 )
               )
@@ -390,6 +404,25 @@ server <- function(input, output, session) {
     req(bootResults$plot)
     bootResults$plot
   })
+  
+  # Botón para descargar el Gráfico de Bootstrap usando ggsave con dimensiones específicas
+  output$downloadBootstrapPlot <- downloadHandler(
+    filename = function() {
+      paste0("BootstrapPlot_", Sys.Date(), ".png")
+    },
+    content = function(file) {
+      req(bootResults$plot)
+      # ggsave con dimensiones height=16 cm y width=22 cm
+      ggsave(
+        filename = file,
+        plot     = bootResults$plot,
+        device   = "png",
+        height   = 16,
+        width    = 22,
+        units    = "cm"
+      )
+    }
+  )
   
   # Mostrar las referencias en HTML en la pestaña "Cómo citar"
   output$bibReferences <- renderUI({
