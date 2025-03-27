@@ -1,14 +1,30 @@
 # app.R
 # Verificar e instalar paquetes si no están presentes
+
+# Lista de paquetes disponibles en CRAN
 paquetes_necesarios <- c(
   "shiny", "shinydashboard", "lavaan", "semPlot", "semTools", "dplyr", 
-  "PsyMetricTools", "readxl", "sessioninfo", "bibtex"
+  "readxl", "sessioninfo", "bibtex"
 )
-
-paquetes_faltantes <- paquetes_necesarios[!(paquetes_necesarios %in% installed.packages()[,"Package"])]
-
+paquetes_faltantes <- paquetes_necesarios[!(paquetes_necesarios %in% installed.packages()[, "Package"])]
 if (length(paquetes_faltantes) > 0) {
   install.packages(paquetes_faltantes, dependencies = TRUE)
+}
+
+# Instalar devtools si no está instalado
+if (!require("devtools", quietly = TRUE)) {
+  install.packages("devtools")
+  library(devtools)
+}
+
+# Instalar condicionalmente PsyMetricTools desde GitHub si no está instalado
+if (!require("PsyMetricTools", quietly = TRUE)) {
+  devtools::install_github("jventural/PsyMetricTools")
+}
+
+# Instalar condicionalmente BayesPsyMetrics desde GitHub si no está instalado
+if (!require("BayesPsyMetrics", quietly = TRUE)) {
+  devtools::install_github("jventural/BayesPsyMetrics")
 }
 
 # Cargar paquetes requeridos
@@ -18,8 +34,8 @@ library(lavaan)          # Structural equation modeling
 library(semPlot)         # SEM visualization
 library(semTools)        # SEM analysis tools and reliability
 library(dplyr)           # Data manipulation
-library(PsyMetricTools)  # Psychometric functions (incluye invertir_items, boot_cfa, boot_cfa_plot)
-library(readxl)          # Excel file reading
+library(PsyMetricTools)  # Funciones psicométricas (incluye invertir_items, boot_cfa, boot_cfa_plot)
+library(readxl)          # Lectura de archivos Excel
 library(sessioninfo)     # Para extraer información de la sesión
 library(bibtex)          # Para gestionar referencias BibTeX
 
@@ -55,6 +71,10 @@ ui <- dashboardPage(
                   value = "",
                   placeholder = "Enter your CFA model specification",
                   rows = 5),
+    # Controles para invertir ítems
+    textInput("invertItems", "Items to Invert (comma-separated)", value = ""),
+    numericInput("numRespuestas", "Number of Responses", value = 4),
+    checkboxInput("comienzaConCero", "Starts with Zero", value = FALSE),
     # Botón para correr el análisis CFA
     actionButton("run", "Run Analysis", class = "run-analysis"),
     hr(),
@@ -64,7 +84,6 @@ ui <- dashboardPage(
       menuItem("Fit Measures", tabName = "fitMeasures", icon = icon("chart-line")),
       menuItem("Model Plot", tabName = "modelPlot", icon = icon("project-diagram")),
       menuItem("Modification Indices", tabName = "modIndices", icon = icon("wrench")),
-      menuItem("Omega Reliability", tabName = "reliability", icon = icon("balance-scale")),
       menuItem("Bootstrap CFA", tabName = "bootstrap", icon = icon("seedling")),
       menuItem("Cómo citar", tabName = "citation", icon = icon("book"))
     )
@@ -172,21 +191,6 @@ ui <- dashboardPage(
               tableOutput("modIndices")
       ),
       
-      # Pestaña: Omega Reliability
-      tabItem(tabName = "reliability",
-              h2("Omega Reliability"),
-              fluidRow(
-                column(4,
-                       textInput("invertItems", "Items to Invert (comma-separated)", value = ""),
-                       numericInput("numRespuestas", "Number of Responses", value = 4),
-                       checkboxInput("comienzaConCero", "Starts with Zero", value = FALSE)
-                ),
-                column(8,
-                       tableOutput("reliabilityOutput")
-                )
-              )
-      ),
-      
       # Pestaña: Bootstrap CFA
       tabItem(tabName = "bootstrap",
               h2("Bootstrap CFA Analysis"),
@@ -207,7 +211,6 @@ ui <- dashboardPage(
                        actionButton("runBootstrap", "Run Bootstrap", class = "btn-primary")
                 ),
                 column(8,
-                       # Botón para guardar el gráfico del bootstrap con ggsave
                        downloadButton("downloadBootstrapPlot", "Guardar Gráfico Bootstrap", class = "btn-warning"),
                        br(), br(),
                        plotOutput("bootstrapPlot")
@@ -236,18 +239,33 @@ server <- function(input, output, session) {
   # Variable reactiva para almacenar avisos del modelo
   modelWarnings <- reactiveVal(character(0))
   
-  # Leer y limpiar datos originales
-  data_full <- reactive({
+  # Leer, limpiar datos y aplicar inversión de ítems (si se especifica)
+  data_processed <- reactive({
     req(input$datafile)
-    read_excel(input$datafile$datapath) %>% na.omit()
+    raw_data <- read_excel(input$datafile$datapath) %>% na.omit()
+    # Procesar ítems a invertir
+    items_to_invert <- if(nchar(input$invertItems) > 0) {
+      trimws(unlist(strsplit(input$invertItems, split = ",")))
+    } else {
+      character(0)
+    }
+    # Si se especifican ítems para invertir, se procesan; de lo contrario se usan los datos originales
+    if(length(items_to_invert) > 0) {
+      invertir_items(raw_data,
+                     items = items_to_invert,
+                     num_respuestas = input$numRespuestas,
+                     comienza_con_cero = input$comienzaConCero)
+    } else {
+      raw_data
+    }
   })
   
-  # Ajustar modelo CFA usando los datos completos, capturando warnings
+  # Ajustar modelo CFA usando los datos procesados, capturando warnings
   fit_initial <- eventReactive(input$run, {
     req(input$modelInput)
     warn_msgs <- character(0)
     fit <- withCallingHandlers(
-      cfa(input$modelInput, data = data_full(), estimator = "WLSMV", mimic = "Mplus", ordered = TRUE),
+      cfa(input$modelInput, data = data_processed(), estimator = "WLSMV", mimic = "Mplus", ordered = TRUE),
       warning = function(w) {
         warn_msgs <<- c(warn_msgs, conditionMessage(w))
         invokeRestart("muffleWarning")
@@ -308,31 +326,6 @@ server <- function(input, output, session) {
     modificationindices(fit_initial(), sort. = TRUE, power = TRUE)
   }, rownames = TRUE)
   
-  # Omega Reliability
-  output$reliabilityOutput <- renderTable({
-    req(input$datafile)
-    raw_data <- read_excel(input$datafile$datapath) %>% na.omit()
-    
-    # Procesar ítems a invertir
-    items_to_invert <- strsplit(input$invertItems, split = ",")[[1]]
-    items_to_invert <- trimws(items_to_invert)
-    items_to_invert <- items_to_invert[items_to_invert != ""]
-    
-    # Invertir ítems según la configuración del usuario
-    df_survey_modified <- invertir_items(raw_data, 
-                                         items = items_to_invert, 
-                                         num_respuestas = input$numRespuestas, 
-                                         comienza_con_cero = input$comienzaConCero)
-    
-    # Ajustar modelo con datos modificados
-    fit_modified <- cfa(input$modelInput, data = df_survey_modified, 
-                        estimator = "WLSMV", mimic = "Mplus", ordered = TRUE)
-    
-    # Calcular fiabilidad compuesta (Omega)
-    reliability_res <- compRelSEM(fit_modified, tau.eq = FALSE, ord.scale = TRUE)
-    as.data.frame(reliability_res)
-  }, rownames = TRUE)
-  
   # Descargar el Model Plot en alta calidad (600 dpi)
   output$downloadPlot <- downloadHandler(
     filename = function() {
@@ -369,9 +362,9 @@ server <- function(input, output, session) {
     withProgress(message = "Ejecutando Bootstrap CFA...", value = 0, {
       
       incProgress(0.2, detail = "Preparando datos")
-      # Ejecutar boot_cfa utilizando los inputs correspondientes
+      # Ejecutar boot_cfa utilizando los datos procesados
       results <- boot_cfa(
-        new_df = data_full(),
+        new_df = data_processed(),
         model_string = input$modelInput,
         item_prefix = input$itemPrefix,
         seed = input$bootstrapSeed,
@@ -412,7 +405,6 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       req(bootResults$plot)
-      # ggsave con dimensiones height=16 cm y width=22 cm
       ggsave(
         filename = file,
         plot     = bootResults$plot,
