@@ -1,15 +1,18 @@
-# app.R
-# Verificar e instalar paquetes si no están presentes
+# app.R (parte superior)
+options(repos = c(CRAN = "https://cloud.r-project.org"))
 
 # Lista de paquetes disponibles en CRAN
 paquetes_necesarios <- c(
   "shiny", "shinydashboard", "lavaan", "semPlot", "semTools", "dplyr",  "ggpubr",
   "readxl", "sessioninfo", "bibtex"
 )
-paquetes_faltantes <- paquetes_necesarios[!(paquetes_necesarios %in% installed.packages()[, "Package"])]
+paquetes_faltantes <- paquetes_necesarios[!(
+  paquetes_necesarios %in% installed.packages()[, "Package"]
+)]
 if (length(paquetes_faltantes) > 0) {
   install.packages(paquetes_faltantes, dependencies = TRUE)
 }
+
 
 # Instalar devtools si no está instalado
 if (!require("devtools", quietly = TRUE)) {
