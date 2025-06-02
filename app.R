@@ -3,7 +3,7 @@
 
 # Lista de paquetes disponibles en CRAN
 paquetes_necesarios <- c(
-  "shiny", "shinydashboard", "lavaan", "semPlot", "semTools", "dplyr", 
+  "shiny", "shinydashboard", "lavaan", "semPlot", "semTools", "dplyr",  "ggpubr",
   "readxl", "sessioninfo", "bibtex"
 )
 paquetes_faltantes <- paquetes_necesarios[!(paquetes_necesarios %in% installed.packages()[, "Package"])]
