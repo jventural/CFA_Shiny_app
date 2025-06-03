@@ -1706,7 +1706,7 @@
     },
     "curl": {
       "Package": "curl",
-      "Version": "6.0.1",
+      "Version": "6.2.3",
       "Source": "Repository",
       "Type": "Package",
       "Title": "A Modern and Flexible Web Client for R",
@@ -1734,7 +1734,7 @@
       "Encoding": "UTF-8",
       "Language": "en-US",
       "NeedsCompilation": "yes",
-      "Author": "Jeroen Ooms [aut, cre] (<https://orcid.org/0000-0002-4035-0289>), Hadley Wickham [ctb], Posit Software, PBC [cph]",
+      "Author": "Jeroen Ooms [aut, cre] (ORCID: <https://orcid.org/0000-0002-4035-0289>), Hadley Wickham [ctb], Posit Software, PBC [cph]",
       "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
       "Repository": "CRAN"
     },
@@ -4934,11 +4934,11 @@
     },
     "promises": {
       "Package": "promises",
-      "Version": "1.3.0",
+      "Version": "1.3.3",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Abstractions for Promise-Based Asynchronous Programming",
-      "Authors@R": "c( person(\"Joe\", \"Cheng\", , \"joe@posit.co\", role = c(\"aut\", \"cre\")), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\")) )",
+      "Authors@R": "c( person(\"Joe\", \"Cheng\", , \"joe@posit.co\", role = c(\"aut\", \"cre\")), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"), comment = c(ROR = \"03wc8by49\")) )",
       "Description": "Provides fundamental abstractions for doing asynchronous programming in R using promises. Asynchronous programming is useful for allowing a single R process to orchestrate multiple tasks in the background while also attending to something else. Semantics are similar to 'JavaScript' promises, but with a syntax that is idiomatic R.",
       "License": "MIT + file LICENSE",
       "URL": "https://rstudio.github.io/promises/, https://github.com/rstudio/promises",
@@ -4958,7 +4958,7 @@
         "purrr",
         "rmarkdown",
         "spelling",
-        "testthat",
+        "testthat (>= 3.0.0)",
         "vembedr"
       ],
       "LinkingTo": [
@@ -4966,12 +4966,14 @@
         "Rcpp"
       ],
       "VignetteBuilder": "knitr",
-      "Config/Needs/website": "rsconnect",
+      "Config/Needs/website": "rsconnect, tidyverse/tidytemplate",
+      "Config/testthat/edition": "3",
+      "Config/usethis/last-upkeep": "2025-05-27",
       "Encoding": "UTF-8",
       "Language": "en-US",
-      "RoxygenNote": "7.3.1",
+      "RoxygenNote": "7.3.2",
       "NeedsCompilation": "yes",
-      "Author": "Joe Cheng [aut, cre], Posit Software, PBC [cph, fnd]",
+      "Author": "Joe Cheng [aut, cre], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Joe Cheng <joe@posit.co>",
       "Repository": "CRAN"
     },
@@ -6239,15 +6241,15 @@
     },
     "semTools": {
       "Package": "semTools",
-      "Version": "0.5-6",
+      "Version": "0.5-7",
       "Source": "Repository",
       "Encoding": "UTF-8",
       "Title": "Useful Tools for Structural Equation Modeling",
-      "Description": "Provides tools for structural equation modeling, many of which extend the 'lavaan' package; for example, to pool results from multiple imputations, probe latent interactions, or test measurement invariance.",
-      "Authors@R": "c(person(given = c(\"Terrence\",\"D.\"), family = \"Jorgensen\", role = c(\"aut\",\"cre\"), email=\"TJorgensen314@gmail.com\", comment = c(ORCID = \"0000-0001-5111-6773\")), person(given = \"Sunthud\", family = \"Pornprasertmanit\", role = \"aut\", email = \"psunthud@gmail.com\"), person(given = c(\"Alexander\",\"M.\"), family = \"Schoemann\", role = \"aut\", email=\"schoemanna@ecu.edu\", comment = c(ORCID = \"0000-0002-8479-8798\")), person(given = \"Yves\", family = \"Rosseel\", role = \"aut\", email=\"Yves.Rosseel@UGent.be\", comment = c(ORCID = \"0000-0002-4129-4477\")), person(given = \"Patrick\", family = \"Miller\", role = \"ctb\", email=\"pmille13@nd.edu\"), person(given = \"Corbin\", family = \"Quick\", role = \"ctb\", email=\"corbinq@umich.edu\"), person(given = \"Mauricio\", family = \"Garnier-Villarreal\", role = \"ctb\", email=\"mauricio.garniervillarreal@marquette.edu\", comment = c(ORCID = \"0000-0002-2951-6647\")), person(given = \"James\", family = \"Selig\", role = \"ctb\", email=\"selig@unm.edu\"), person(given = \"Aaron\", family = \"Boulton\", role = \"ctb\", email=\"aboulton@email.unc.edu\"), person(given = \"Kristopher\", family = \"Preacher\", role = \"ctb\", email=\"kris.preacher@vanderbilt.edu\"), person(given = \"Donna\", family = \"Coffman\", role = \"ctb\", email=\"dlc30@psu.edu\"), person(given = \"Mijke\", family = \"Rhemtulla\", role = \"ctb\", email=\"mrhemtulla@ucdavis.edu\", comment = c(ORCID = \"0000-0003-2572-2424\")), person(given = \"Alexander\", family = \"Robitzsch\", role = \"ctb\", email=\"a.robitzsch@bifie.at\", comment = c(ORCID = \"0000-0002-8226-3132\")), person(given = \"Craig\", family = \"Enders\", role = \"ctb\", email=\"cenders@psych.ucla.edu\"), person(given = \"Ruben\", family = \"Arslan\", role = \"ctb\", email=\"rubenarslan@gmail.com\", comment = c(ORCID = \"0000-0002-6670-5658\")), person(given = \"Bell\", family = \"Clinton\", role = \"ctb\", email=\"clintonbell@ku.edu\"), person(given = \"Pavel\", family = \"Panko\", role = \"ctb\", email=\"pavel.panko@ttu.edu\"), person(given = \"Edgar\", family = \"Merkle\", role = \"ctb\", email=\"merklee@missouri.edu\", comment = c(ORCID = \"0000-0001-7158-0653\")), person(given = \"Steven\", family = \"Chesnut\", role = \"ctb\", email=\"Steven.Chesnut@usm.edu\"), person(given = \"Jarrett\", family = \"Byrnes\", role = \"ctb\", email=\"Jarrett.Byrnes@umb.edu\"), person(given = c(\"Jason\",\"D.\"), family = \"Rights\", role = \"ctb\", email=\"jrights@psych.ubc.ca\"), person(given = \"Ylenio\", family = \"Longo\", role = \"ctb\", email=\"yleniolongo@gmail.com\"), person(given = \"Maxwell\", family = \"Mansolf\", role = \"ctb\", email=\"mamansolf@gmail.com\", comment = c(ORCID = \"0000-0001-6861-8657\")), person(given = \"Mattan S.\", family = \"Ben-Shachar\", role = \"ctb\", email=\"matanshm@post.bgu.ac.il\", comment = c(ORCID = \"0000-0002-4287-4801\")), person(given = \"Mikko\", family = \"Rönkkö\", role = \"ctb\", email = \"mikko.ronkko@jyu.fi\", comment = c(ORCID = \"0000-0001-7988-7609\")), person(given = \"Andrew R.\", family = \"Johnson\", role = \"ctb\", email = \"andrew.johnson@curtin.edu.au\", comment = c(ORCID = \"0000-0001-7000-8065\")) )",
+      "Description": "Provides miscellaneous tools for structural equation modeling,  many of which extend the 'lavaan' package. For example, latent interactions can be estimated using product indicators (Lin et al., 2010, <doi:10.1080/10705511.2010.488999>) and simple effects probed; analytical power analyses can be conducted (Jak et al., 2021, <doi:10.3758/s13428-020-01479-0>); and scale reliability can be estimated based on estimated factor-model parameters.",
+      "Authors@R": "c(person(given = c(\"Terrence\",\"D.\"), family = \"Jorgensen\", role = c(\"aut\",\"cre\"), email=\"TJorgensen314@gmail.com\", comment = c(ORCID = \"0000-0001-5111-6773\")), person(given = \"Sunthud\", family = \"Pornprasertmanit\", role = \"aut\", email = \"psunthud@gmail.com\"), person(given = c(\"Alexander\",\"M.\"), family = \"Schoemann\", role = \"aut\", email=\"schoemanna@ecu.edu\", comment = c(ORCID = \"0000-0002-8479-8798\")), person(given = \"Yves\", family = \"Rosseel\", role = \"aut\", email=\"Yves.Rosseel@UGent.be\", comment = c(ORCID = \"0000-0002-4129-4477\")), person(given = \"Patrick\", family = \"Miller\", role = \"ctb\", email=\"pmille13@nd.edu\"), person(given = \"Corbin\", family = \"Quick\", role = \"ctb\", email=\"corbinq@umich.edu\"), person(given = \"Mauricio\", family = \"Garnier-Villarreal\", role = \"ctb\", email=\"m.garniervillarreal@vu.nl\", comment = c(ORCID = \"0000-0002-2951-6647\")), person(given = \"James\", family = \"Selig\", role = \"ctb\", email=\"selig@unm.edu\"), person(given = \"Aaron\", family = \"Boulton\", role = \"ctb\", email=\"aboulton@email.unc.edu\"), person(given = \"Kristopher\", family = \"Preacher\", role = \"ctb\", email=\"kris.preacher@vanderbilt.edu\"), person(given = \"Donna\", family = \"Coffman\", role = \"ctb\", email=\"dlc30@psu.edu\"), person(given = \"Mijke\", family = \"Rhemtulla\", role = \"ctb\", email=\"mrhemtulla@ucdavis.edu\", comment = c(ORCID = \"0000-0003-2572-2424\")), person(given = \"Alexander\", family = \"Robitzsch\", role = \"ctb\", email=\"a.robitzsch@bifie.at\", comment = c(ORCID = \"0000-0002-8226-3132\")), person(given = \"Craig\", family = \"Enders\", role = \"ctb\", email=\"cenders@psych.ucla.edu\"), person(given = \"Ruben\", family = \"Arslan\", role = \"ctb\", email=\"rubenarslan@gmail.com\", comment = c(ORCID = \"0000-0002-6670-5658\")), person(given = \"Bell\", family = \"Clinton\", role = \"ctb\", email=\"clintonbell@ku.edu\"), person(given = \"Pavel\", family = \"Panko\", role = \"ctb\", email=\"pavel.panko@ttu.edu\"), person(given = \"Edgar\", family = \"Merkle\", role = \"ctb\", email=\"merklee@missouri.edu\", comment = c(ORCID = \"0000-0001-7158-0653\")), person(given = \"Steven\", family = \"Chesnut\", role = \"ctb\", email=\"Steven.Chesnut@usm.edu\"), person(given = \"Jarrett\", family = \"Byrnes\", role = \"ctb\", email=\"Jarrett.Byrnes@umb.edu\"), person(given = c(\"Jason\",\"D.\"), family = \"Rights\", role = \"ctb\", email=\"jrights@psych.ubc.ca\"), person(given = \"Ylenio\", family = \"Longo\", role = \"ctb\", email=\"yleniolongo@gmail.com\"), person(given = \"Maxwell\", family = \"Mansolf\", role = \"ctb\", email=\"mamansolf@gmail.com\", comment = c(ORCID = \"0000-0001-6861-8657\")), person(given = \"Mattan S.\", family = \"Ben-Shachar\", role = \"ctb\", email=\"matanshm@post.bgu.ac.il\", comment = c(ORCID = \"0000-0002-4287-4801\")), person(given = \"Mikko\", family = \"Rönkkö\", role = \"ctb\", email = \"mikko.ronkko@jyu.fi\", comment = c(ORCID = \"0000-0001-7988-7609\")), person(given = \"Andrew R.\", family = \"Johnson\", role = \"ctb\", email = \"andrew.johnson@curtin.edu.au\", comment = c(ORCID = \"0000-0001-7000-8065\")), person(given = \"Leonard\", family = \"Vanbrabant\", role = \"ctb\", email = \"L.Vanbrabant@ggdwestbrabant.nl\") )",
       "Depends": [
         "R(>= 4.0)",
-        "lavaan(>= 0.6-11)",
+        "lavaan(>= 0.6-12)",
         "methods"
       ],
       "Imports": [
@@ -6260,38 +6262,40 @@
         "Amelia",
         "blavaan",
         "emmeans",
-        "foreign",
+        "lavaan.mi",
         "MASS",
         "mice",
-        "GPArotation",
         "mnormt",
         "parallel",
-        "testthat"
+        "restriktor",
+        "testthat",
+        "GPArotation"
       ],
       "License": "GPL (>= 2)",
       "LazyData": "yes",
       "LazyLoad": "yes",
       "URL": "https://github.com/simsem/semTools/wiki",
       "BugReports": "https://github.com/simsem/semTools/issues",
-      "RoxygenNote": "7.1.2",
+      "Date": "2025-03-12",
+      "RoxygenNote": "7.3.2",
       "NeedsCompilation": "no",
-      "Author": "Terrence D. Jorgensen [aut, cre] (<https://orcid.org/0000-0001-5111-6773>), Sunthud Pornprasertmanit [aut], Alexander M. Schoemann [aut] (<https://orcid.org/0000-0002-8479-8798>), Yves Rosseel [aut] (<https://orcid.org/0000-0002-4129-4477>), Patrick Miller [ctb], Corbin Quick [ctb], Mauricio Garnier-Villarreal [ctb] (<https://orcid.org/0000-0002-2951-6647>), James Selig [ctb], Aaron Boulton [ctb], Kristopher Preacher [ctb], Donna Coffman [ctb], Mijke Rhemtulla [ctb] (<https://orcid.org/0000-0003-2572-2424>), Alexander Robitzsch [ctb] (<https://orcid.org/0000-0002-8226-3132>), Craig Enders [ctb], Ruben Arslan [ctb] (<https://orcid.org/0000-0002-6670-5658>), Bell Clinton [ctb], Pavel Panko [ctb], Edgar Merkle [ctb] (<https://orcid.org/0000-0001-7158-0653>), Steven Chesnut [ctb], Jarrett Byrnes [ctb], Jason D. Rights [ctb], Ylenio Longo [ctb], Maxwell Mansolf [ctb] (<https://orcid.org/0000-0001-6861-8657>), Mattan S. Ben-Shachar [ctb] (<https://orcid.org/0000-0002-4287-4801>), Mikko Rönkkö [ctb] (<https://orcid.org/0000-0001-7988-7609>), Andrew R. Johnson [ctb] (<https://orcid.org/0000-0001-7000-8065>)",
+      "Author": "Terrence D. Jorgensen [aut, cre] (<https://orcid.org/0000-0001-5111-6773>), Sunthud Pornprasertmanit [aut], Alexander M. Schoemann [aut] (<https://orcid.org/0000-0002-8479-8798>), Yves Rosseel [aut] (<https://orcid.org/0000-0002-4129-4477>), Patrick Miller [ctb], Corbin Quick [ctb], Mauricio Garnier-Villarreal [ctb] (<https://orcid.org/0000-0002-2951-6647>), James Selig [ctb], Aaron Boulton [ctb], Kristopher Preacher [ctb], Donna Coffman [ctb], Mijke Rhemtulla [ctb] (<https://orcid.org/0000-0003-2572-2424>), Alexander Robitzsch [ctb] (<https://orcid.org/0000-0002-8226-3132>), Craig Enders [ctb], Ruben Arslan [ctb] (<https://orcid.org/0000-0002-6670-5658>), Bell Clinton [ctb], Pavel Panko [ctb], Edgar Merkle [ctb] (<https://orcid.org/0000-0001-7158-0653>), Steven Chesnut [ctb], Jarrett Byrnes [ctb], Jason D. Rights [ctb], Ylenio Longo [ctb], Maxwell Mansolf [ctb] (<https://orcid.org/0000-0001-6861-8657>), Mattan S. Ben-Shachar [ctb] (<https://orcid.org/0000-0002-4287-4801>), Mikko Rönkkö [ctb] (<https://orcid.org/0000-0001-7988-7609>), Andrew R. Johnson [ctb] (<https://orcid.org/0000-0001-7000-8065>), Leonard Vanbrabant [ctb]",
       "Maintainer": "Terrence D. Jorgensen <TJorgensen314@gmail.com>",
       "Repository": "CRAN"
     },
     "sessioninfo": {
       "Package": "sessioninfo",
-      "Version": "1.2.2",
+      "Version": "1.2.3",
       "Source": "Repository",
       "Title": "R Session Information",
-      "Authors@R": "c(person(given = \"Gábor\", family = \"Csárdi\", role = \"cre\", email = \"csardi.gabor@gmail.com\"), person(given = \"Hadley\", family = \"Wickham\", role = \"aut\"), person(given = \"Winston\", family = \"Chang\", role = \"aut\"), person(given = \"Robert\", family = \"Flight\", role = \"aut\"), person(given = \"Kirill\", family = \"Müller\", role = \"aut\"), person(given = \"Jim\", family = \"Hester\", role = \"aut\"), person(given = \"R Core team\", role = \"ctb\"))",
+      "Authors@R": "c( person(\"Gábor\", \"Csárdi\", , \"csardi.gabor@gmail.com\", role = \"cre\"), person(\"Hadley\", \"Wickham\", role = \"aut\"), person(\"Winston\", \"Chang\", role = \"aut\"), person(\"Robert\", \"Flight\", role = \"aut\"), person(\"Kirill\", \"Müller\", role = \"aut\"), person(\"Jim\", \"Hester\", role = \"aut\"), person(\"R Core team\", role = \"ctb\"), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\")) )",
       "Maintainer": "Gábor Csárdi <csardi.gabor@gmail.com>",
       "Description": "Query and print information about the current R session.  It is similar to 'utils::sessionInfo()', but includes more information about packages, and where they were installed from.",
       "License": "GPL-2",
-      "URL": "https://github.com/r-lib/sessioninfo#readme, https://r-lib.github.io/sessioninfo/",
+      "URL": "https://github.com/r-lib/sessioninfo#readme, https://sessioninfo.r-lib.org",
       "BugReports": "https://github.com/r-lib/sessioninfo/issues",
       "Depends": [
-        "R (>= 2.10)"
+        "R (>= 3.4)"
       ],
       "Imports": [
         "cli (>= 3.1.0)",
@@ -6301,24 +6305,24 @@
       "Suggests": [
         "callr",
         "covr",
-        "mockery",
+        "gh",
         "reticulate",
         "rmarkdown",
-        "testthat",
+        "testthat (>= 3.2.0)",
         "withr"
       ],
-      "Encoding": "UTF-8",
-      "RoxygenNote": "7.1.2.9000",
+      "Config/Needs/website": "pkgdown, tidyverse/tidytemplate",
       "Config/testthat/edition": "3",
-      "Config/Needs/website": "pkgdown",
       "Config/testthat/parallel": "true",
+      "Encoding": "UTF-8",
+      "RoxygenNote": "7.3.2",
       "NeedsCompilation": "no",
-      "Author": "Gábor Csárdi [cre], Hadley Wickham [aut], Winston Chang [aut], Robert Flight [aut], Kirill Müller [aut], Jim Hester [aut], R Core team [ctb]",
+      "Author": "Gábor Csárdi [cre], Hadley Wickham [aut], Winston Chang [aut], Robert Flight [aut], Kirill Müller [aut], Jim Hester [aut], R Core team [ctb], Posit Software, PBC [cph, fnd]",
       "Repository": "CRAN"
     },
     "shiny": {
       "Package": "shiny",
-      "Version": "1.9.1",
+      "Version": "1.10.0",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Web Application Framework for R",
@@ -6341,7 +6345,7 @@
         "R6 (>= 2.0)",
         "sourcetools",
         "later (>= 1.0.0)",
-        "promises (>= 1.1.0)",
+        "promises (>= 1.3.2)",
         "tools",
         "crayon",
         "rlang (>= 0.4.10)",
@@ -6354,6 +6358,7 @@
         "lifecycle (>= 0.2.0)"
       ],
       "Suggests": [
+        "coro (>= 1.1.0)",
         "datasets",
         "DT",
         "Cairo (>= 1.5-5)",
@@ -6386,27 +6391,28 @@
     },
     "shinydashboard": {
       "Package": "shinydashboard",
-      "Version": "0.7.2",
+      "Version": "0.7.3",
       "Source": "Repository",
       "Title": "Create Dashboards with 'Shiny'",
-      "Authors@R": "c( person(\"Winston\", \"Chang\", role = c(\"aut\", \"cre\"), email = \"winston@rstudio.com\"), person(\"Barbara\", \"Borges Ribeiro\", role = \"aut\", email = \"barbara@rstudio.com\"), person(family = \"RStudio\", role = \"cph\"), person(family = \"Almasaeed Studio\", role = c(\"ctb\", \"cph\"), comment = \"AdminLTE theme for Bootstrap\"), person(family = \"Adobe Systems Incorporated\", role = c(\"ctb\", \"cph\"), comment = \"Source Sans Pro font\") )",
+      "Authors@R": "c( person(\"Winston\", \"Chang\", , \"winston@posit.co\", role = c(\"aut\", \"cre\")), person(\"Barbara\", \"Borges Ribeiro\", role = \"aut\"), person(, \"Posit Software, PBC\", role = \"cph\"), person(, \"Almasaeed Studio\", role = c(\"ctb\", \"cph\"), comment = \"AdminLTE theme for Bootstrap\"), person(, \"Adobe Systems Incorporated\", role = c(\"ctb\", \"cph\"), comment = \"Source Sans Pro font\") )",
       "Description": "Create dashboards with 'Shiny'. This package provides a theme on top of 'Shiny', making it easy to create attractive dashboards.",
-      "URL": "http://rstudio.github.io/shinydashboard/",
+      "License": "MIT + file LICENSE",
+      "URL": "https://rstudio.github.io/shinydashboard/, https://github.com/rstudio/shinydashboard",
+      "BugReports": "https://github.com/rstudio/shinydashboard/issues",
       "Depends": [
         "R (>= 3.0)"
       ],
-      "License": "GPL (>= 2) | file LICENSE",
       "Imports": [
-        "utils",
-        "shiny (>= 1.0.0)",
         "htmltools (>= 0.2.6)",
-        "promises"
+        "promises",
+        "shiny (>= 1.0.0)",
+        "utils"
       ],
-      "BugReports": "https://github.com/rstudio/shinydashboard",
-      "RoxygenNote": "6.0.1.9000",
+      "Encoding": "UTF-8",
+      "RoxygenNote": "7.3.2",
       "NeedsCompilation": "no",
-      "Author": "Winston Chang [aut, cre], Barbara Borges Ribeiro [aut], RStudio [cph], Almasaeed Studio [ctb, cph] (AdminLTE theme for Bootstrap), Adobe Systems Incorporated [ctb, cph] (Source Sans Pro font)",
-      "Maintainer": "Winston Chang <winston@rstudio.com>",
+      "Author": "Winston Chang [aut, cre], Barbara Borges Ribeiro [aut], Posit Software, PBC [cph], Almasaeed Studio [ctb, cph] (AdminLTE theme for Bootstrap), Adobe Systems Incorporated [ctb, cph] (Source Sans Pro font)",
+      "Maintainer": "Winston Chang <winston@posit.co>",
       "Repository": "CRAN"
     },
     "sourcetools": {
