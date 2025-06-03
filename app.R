@@ -1,26 +1,31 @@
 # app.R
 
 # ——————————————————————————————————————————————————————————————
-# Establecer espejo CRAN por defecto
+# Establecer espejo CRAN por defecto (evita el error “trying to use CRAN without setting a mirror”)
 options(repos = c(CRAN = "https://cran.rstudio.com"))
 
-# Comprobar e instalar paquetes faltantes antes de cargar la aplicación
+# 1) Instalar e importar paquetes CRAN necesarios
 paquetes_necesarios <- c(
   "shiny", "shinydashboard", "lavaan", "semPlot", "semTools",
-  "dplyr", "PsyMetricTools", "readxl", "sessioninfo", "bibtex",
-  "ggpubr"
+  "dplyr", "readxl", "sessioninfo", "bibtex", "ggpubr", "devtools"
 )
 paquetes_faltantes <- paquetes_necesarios[!(paquetes_necesarios %in% installed.packages()[, "Package"])]
 if (length(paquetes_faltantes) > 0) {
   install.packages(paquetes_faltantes, dependencies = TRUE, repos = "https://cran.rstudio.com")
 }
-
-# Cargar todas las librerías (incluye ggpubr y el resto)
+# Cargar todos los paquetes CRAN
 lapply(paquetes_necesarios, function(pk) {
   suppressPackageStartupMessages(
     library(pk, character.only = TRUE)
   )
 })
+
+# 2) Instalar PsyMetricTools desde GitHub si no está presente
+if (!("PsyMetricTools" %in% installed.packages()[, "Package"])) {
+  message("Instalando PsyMetricTools desde GitHub...")
+  devtools::install_github("jventural/PsyMetricTools")
+}
+suppressPackageStartupMessages(library("PsyMetricTools", character.only = TRUE))
 
 # ——————————————————————————————————————————————————————————————
 # Generar el archivo de referencias con los paquetes adjuntos
@@ -29,7 +34,6 @@ attached_pkgs <- si$packages$package[si$packages$attached]
 bibtex::write.bib(attached_pkgs, file = "references.bib")
 bibs <- bibtex::read.bib("references.bib")
 
-# Función para convertir las referencias a HTML
 convert_bib_to_html <- function(bibs) {
   # Convertir cada entrada a texto y unir las líneas
   bib_char <- sapply(bibs, function(x) paste(format(x), collapse = " "))
@@ -134,11 +138,10 @@ ui <- dashboardPage(
     ),
     
     tabItems(
-      # Pestaña: Model Summary (aviso primero, resumen después)
+      # Pestaña: Model Summary
       tabItem(
         tabName = "summary",
         h2("Model Summary"),
-        # Mostrar los avisos del modelo (si existen) al inicio
         uiOutput("modelWarning"),
         verbatimTextOutput("summaryOutput")
       ),
@@ -230,22 +233,20 @@ ui <- dashboardPage(
 # Definir el servidor (server)
 server <- function(input, output, session) {
   
-  # Variable reactiva para almacenar avisos del modelo
+  # Guardar warnings del modelo CFA
   modelWarnings <- reactiveVal(character(0))
   
-  # Leer, limpiar datos y aplicar inversión de ítems (si se especifica)
+  # Leer, limpiar datos y aplicar inversión de ítems
   data_processed <- reactive({
     req(input$datafile)
     raw_data <- read_excel(input$datafile$datapath) %>% na.omit()
     
-    # Procesar ítems a invertir
-    items_to_invert <- if (nchar(input$invertItems) > 0) {
+    items_to_invert <- if (nzchar(input$invertItems)) {
       trimws(unlist(strsplit(input$invertItems, split = ",")))
     } else {
       character(0)
     }
     
-    # Si se especifican ítems para invertir, se procesan; de lo contrario se usan los datos originales
     if (length(items_to_invert) > 0) {
       invertir_items(
         raw_data,
@@ -258,7 +259,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # Ajustar modelo CFA usando los datos procesados, capturando warnings
+  # Ajustar modelo CFA capturando warnings
   fit_initial <- eventReactive(input$run, {
     req(input$modelInput)
     warn_msgs <- character(0)
@@ -275,11 +276,11 @@ server <- function(input, output, session) {
         invokeRestart("muffleWarning")
       }
     )
-    modelWarnings(warn_msgs)  # Guardamos los avisos
+    modelWarnings(warn_msgs)
     fit
   })
   
-  # Renderizar resumen del modelo
+  # Mostrar resumen del modelo
   output$summaryOutput <- renderPrint({
     req(fit_initial())
     summary(
@@ -290,7 +291,7 @@ server <- function(input, output, session) {
     )
   })
   
-  # Renderizar los avisos del modelo (si existen) al inicio
+  # Mostrar warnings si los hay
   output$modelWarning <- renderUI({
     msgs <- modelWarnings()
     if (length(msgs) > 0) {
@@ -298,7 +299,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # Fit Measures
+  # Mostrar Fit Measures
   output$fitMeasures <- renderTable({
     req(fit_initial())
     fm <- fitMeasures(
@@ -312,7 +313,7 @@ server <- function(input, output, session) {
     df_fm
   }, rownames = FALSE)
   
-  # Model Plot
+  # Dibujar el semPaths
   output$modelPlot <- renderPlot({
     req(fit_initial())
     semPaths(
@@ -341,7 +342,7 @@ server <- function(input, output, session) {
     modificationindices(fit_initial(), sort. = TRUE, power = TRUE)
   }, rownames = TRUE)
   
-  # Descargar el Model Plot en alta calidad (600 dpi)
+  # Descargar modelo en alta resolución
   output$downloadPlot <- downloadHandler(
     filename = function() {
       paste0("ModelPlot_", Sys.Date(), ".png")
@@ -371,15 +372,14 @@ server <- function(input, output, session) {
     }
   )
   
-  # ReactiveValues para almacenar resultados del bootstrap
+  # ReactiveValues para guardar bootstrap
   bootResults <- reactiveValues(plot = NULL, results = NULL)
   
-  # Ejecutar el bootstrap CFA cuando se presiona el botón, con barra de progreso
+  # Ejecutar Bootstrap CFA
   observeEvent(input$runBootstrap, {
     req(input$datafile, input$modelInput)
     withProgress(message = "Ejecutando Bootstrap CFA...", value = 0, {
       incProgress(0.2, detail = "Preparando datos")
-      # Ejecutar boot_cfa utilizando los datos procesados
       results <- boot_cfa(
         new_df = data_processed(),
         model_string = input$modelInput,
@@ -403,19 +403,18 @@ server <- function(input, output, session) {
       )
       
       incProgress(0.3, detail = "Finalizando")
-      
       bootResults$plot <- bootPlot
       bootResults$results <- results
     })
   })
   
-  # Renderizar el gráfico del Bootstrap CFA
+  # Mostrar gráfico de Bootstrap
   output$bootstrapPlot <- renderPlot({
     req(bootResults$plot)
     bootResults$plot
   })
   
-  # Botón para descargar el Gráfico de Bootstrap usando ggsave con dimensiones específicas
+  # Descargar gráfico de Bootstrap
   output$downloadBootstrapPlot <- downloadHandler(
     filename = function() {
       paste0("BootstrapPlot_", Sys.Date(), ".png")
@@ -433,7 +432,7 @@ server <- function(input, output, session) {
     }
   )
   
-  # Mostrar las referencias en HTML en la pestaña "Cómo citar"
+  # Mostrar referencias en “Cómo citar”
   output$bibReferences <- renderUI({
     HTML(convert_bib_to_html(bibs))
   })
