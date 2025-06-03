@@ -1,17 +1,26 @@
-# app.R (parte superior)
-options(repos = c(CRAN = "https://cloud.r-project.org"))
+# app.R
+# Verificar e instalar paquetes si no están presentes
+
+# Debe devolver algo como ‘1.3.2’ o superior
+# Al inicio del app.R:
+if (packageVersion("promises") < "1.3.2") {
+  install.packages("promises", dependencies = TRUE)
+  # Tras instalar, forzar reinicio para que se cargue la nueva versión:
+  stop("El paquete 'promises' se actualizó. Reinicia la aplicación.")
+}
+
 
 # Lista de paquetes disponibles en CRAN
 paquetes_necesarios <- c(
-  "shiny", "shinydashboard", "lavaan", "semPlot", "semTools", "dplyr",  "ggpubr",
+  "shiny", "shinydashboard", "lavaan", "semPlot", "semTools", "dplyr", 
   "readxl", "sessioninfo", "bibtex"
 )
-paquetes_faltantes <- paquetes_necesarios[!(
-  paquetes_necesarios %in% installed.packages()[, "Package"]
-)]
+
+paquetes_faltantes <- paquetes_necesarios[!(paquetes_necesarios %in% installed.packages()[, "Package"])]
 if (length(paquetes_faltantes) > 0) {
   install.packages(paquetes_faltantes, dependencies = TRUE)
 }
+
 
 
 # Instalar devtools si no está instalado
