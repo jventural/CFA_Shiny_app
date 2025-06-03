@@ -1,6 +1,9 @@
 # app.R
 
 # ——————————————————————————————————————————————————————————————
+# Establecer espejo CRAN por defecto
+options(repos = c(CRAN = "https://cran.rstudio.com"))
+
 # Comprobar e instalar paquetes faltantes antes de cargar la aplicación
 paquetes_necesarios <- c(
   "shiny", "shinydashboard", "lavaan", "semPlot", "semTools",
@@ -9,7 +12,7 @@ paquetes_necesarios <- c(
 )
 paquetes_faltantes <- paquetes_necesarios[!(paquetes_necesarios %in% installed.packages()[, "Package"])]
 if (length(paquetes_faltantes) > 0) {
-  install.packages(paquetes_faltantes, dependencies = TRUE)
+  install.packages(paquetes_faltantes, dependencies = TRUE, repos = "https://cran.rstudio.com")
 }
 
 # Cargar todas las librerías (incluye ggpubr y el resto)
