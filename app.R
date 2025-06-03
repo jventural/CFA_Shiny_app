@@ -1,13 +1,13 @@
 # app.R
 
 # ——————————————————————————————————————————————————————————————
-# Establecer espejo CRAN por defecto (evita el error “trying to use CRAN without setting a mirror”)
+# Establecer espejo CRAN por defecto (evita “trying to use CRAN without setting a mirror”)
 options(repos = c(CRAN = "https://cran.rstudio.com"))
 
 # 1) Instalar e importar paquetes CRAN necesarios
 paquetes_necesarios <- c(
   "shiny", "shinydashboard", "lavaan", "semPlot", "semTools",
-  "dplyr", "readxl", "sessioninfo", "bibtex", "ggpubr", "devtools"
+  "dplyr", "readxl", "sessioninfo", "bibtex", "ggpubr"
 )
 paquetes_faltantes <- paquetes_necesarios[!(paquetes_necesarios %in% installed.packages()[, "Package"])]
 if (length(paquetes_faltantes) > 0) {
@@ -20,12 +20,11 @@ lapply(paquetes_necesarios, function(pk) {
   )
 })
 
-# 2) Instalar PsyMetricTools desde GitHub si no está presente
-if (!("PsyMetricTools" %in% installed.packages()[, "Package"])) {
-  message("Instalando PsyMetricTools desde GitHub...")
-  devtools::install_github("jventural/PsyMetricTools")
+# 2) Intentar cargar PsyMetricTools (debe instalarse manualmente antes de desplegar)
+psy_available <- require("PsyMetricTools", quietly = TRUE)
+if (!psy_available) {
+  warning("PsyMetricTools no está disponible; la opción de invertir ítems quedará desactivada.")
 }
-suppressPackageStartupMessages(library("PsyMetricTools", character.only = TRUE))
 
 # ——————————————————————————————————————————————————————————————
 # Generar el archivo de referencias con los paquetes adjuntos
@@ -236,7 +235,7 @@ server <- function(input, output, session) {
   # Guardar warnings del modelo CFA
   modelWarnings <- reactiveVal(character(0))
   
-  # Leer, limpiar datos y aplicar inversión de ítems
+  # Leer, limpiar datos y aplicar inversión de ítems (si PsyMetricTools está disponible)
   data_processed <- reactive({
     req(input$datafile)
     raw_data <- read_excel(input$datafile$datapath) %>% na.omit()
@@ -248,12 +247,20 @@ server <- function(input, output, session) {
     }
     
     if (length(items_to_invert) > 0) {
-      invertir_items(
-        raw_data,
-        items = items_to_invert,
-        num_respuestas = input$numRespuestas,
-        comienza_con_cero = input$comienzaConCero
-      )
+      if (psy_available) {
+        invertir_items(
+          raw_data,
+          items = items_to_invert,
+          num_respuestas = input$numRespuestas,
+          comienza_con_cero = input$comienzaConCero
+        )
+      } else {
+        showNotification(
+          "PsyMetricTools no está instalado; no se invertirán ítems.",
+          type = "warning"
+        )
+        raw_data
+      }
     } else {
       raw_data
     }
