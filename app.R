@@ -12,7 +12,7 @@ if (packageVersion("promises") < "1.3.2") {
 
 # Lista de paquetes disponibles en CRAN
 paquetes_necesarios <- c(
-  "shiny", "shinydashboard", "lavaan", "semPlot", "semTools", "dplyr", 
+  "shiny", "shinydashboard", "lavaan", "semPlot", "semTools", "dplyr", "ggpubr",
   "readxl", "sessioninfo", "bibtex"
 )
 
