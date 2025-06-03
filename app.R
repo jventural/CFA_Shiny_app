@@ -4,7 +4,7 @@
 # (1) Establecer espejo CRAN por defecto
 options(repos = c(CRAN = "https://cran.rstudio.com"))
 
-# (2) Cargar SOLO las bibliotecas que ya deben estar instaladas en el servidor
+# (2) Cargar SOLO las bibliotecas que deben estar instaladas en el servidor
 suppressPackageStartupMessages({
   library(shiny)
   library(shinydashboard)
@@ -15,8 +15,7 @@ suppressPackageStartupMessages({
   library(readxl)
   library(sessioninfo)
   library(bibtex)
-  # ¡NO cargues ggpubr aquí!
-  library(PsyMetricTools)  # <- debe instalarse manualmente o mediante renv
+  library(PsyMetricTools)  # <- debe instalarse previamente (p.ej. via renv o admin)
 })
 
 # ——————————————————————————————————————————————————————————————
@@ -28,7 +27,7 @@ bibs <- bibtex::read.bib("references.bib")
 
 convert_bib_to_html <- function(bibs) {
   bib_char <- sapply(bibs, function(x) paste(format(x), collapse = " "))
-  bib_html  <- gsub("_(.*?)_",        "<em>\\1</em>",     bib_char)
+  bib_html  <- gsub("_(.*?)_",        "<em>\\1</em>",        bib_char)
   bib_html  <- gsub("\\\\texttt\\{(.*?)\\}", "<code>\\1</code>", bib_html)
   bib_html  <- paste0("<p>", bib_html, "</p>")
   paste(bib_html, collapse = "\n")
@@ -161,17 +160,17 @@ ui <- dashboardPage(
         h2("Bootstrap CFA Analysis"),
         fluidRow(
           column(4,
-                 textInput("itemPrefix",       "Item Prefix",                 value = ""),
-                 numericInput("bootstrapSeed", "Seed",                        value = 2023),
-                 numericInput("nReplications", "Number of Replications",      value = 1000),
-                 numericInput("bootstrapDpi",  "DPI",                         value = 600),
-                 textInput("bootstrapPalette", "Palette",                     value = "grey"),
-                 numericInput("omega_ymin_annot","Omega Y-min Annotation",   value = 0.67),
-                 numericInput("omega_ymax_annot","Omega Y-max Annotation",   value = 0.70),
-                 numericInput("comp_ymin_annot", "Composite Y-min Annotation",value = 0.90),
-                 numericInput("comp_ymax_annot", "Composite Y-max Annotation",value = 0.95),
-                 numericInput("abs_ymin_annot",  "Absolute Y-min Annotation", value = 0.08),
-                 numericInput("abs_ymax_annot",  "Absolute Y-max Annotation", value = 0.10),
+                 textInput("itemPrefix",       "Item Prefix",                  value = ""),
+                 numericInput("bootstrapSeed", "Seed",                         value = 2023),
+                 numericInput("nReplications", "Number of Replications",       value = 1000),
+                 numericInput("bootstrapDpi",  "DPI",                          value = 600),
+                 textInput("bootstrapPalette","Palette",                       value = "grey"),
+                 numericInput("omega_ymin_annot","Omega Y-min Annotation",    value = 0.67),
+                 numericInput("omega_ymax_annot","Omega Y-max Annotation",    value = 0.70),
+                 numericInput("comp_ymin_annot", "Composite Y-min Annotation", value = 0.90),
+                 numericInput("comp_ymax_annot", "Composite Y-max Annotation", value = 0.95),
+                 numericInput("abs_ymin_annot",  "Absolute Y-min Annotation",  value = 0.08),
+                 numericInput("abs_ymax_annot",  "Absolute Y-max Annotation",  value = 0.10),
                  br(),
                  actionButton("runBootstrap", "Run Bootstrap", class = "btn-primary")
           ),
@@ -266,7 +265,9 @@ server <- function(input, output, session) {
     req(fit_initial())
     fm <- fitMeasures(
       fit_initial(),
-      c("chisq","df","pvalue","cfi.scaled","tli.scaled","rmsea.scaled","srmr")
+      c("chisq", "df", "pvalue",
+        "cfi.scaled", "tli.scaled",
+        "rmsea.scaled", "srmr")
     )
     df_fm <- data.frame(index = names(fm), value = fm)
     row.names(df_fm) <- NULL
@@ -309,21 +310,21 @@ server <- function(input, output, session) {
       png(file, width = 8, height = 6, units = "in", res = 600)
       semPaths(
         fit_initial(),
-        whatLabels      = "std",
-        rotation        = input$rotation,
-        edge.color      = "grey32",
-        curve           = input$curve,
-        residuals       = FALSE,
-        sizeMan         = input$sizeMan,
-        sizeLat         = input$sizeLat,
-        esize           = input$esize,
-        asize           = input$asize,
-        intercepts      = FALSE,
-        thresholds      = FALSE,
-        label.cex       = input$labelCex,
-        edge.label.cex  = input$edgeLabelCex,
-        sizeMan2        = input$sizeMan2,
-        edge.width      = input$edgeWidth
+        whatLabels       = "std",
+        rotation         = input$rotation,
+        edge.color       = "grey32",
+        curve            = input$curve,
+        residuals        = FALSE,
+        sizeMan          = input$sizeMan,
+        sizeLat          = input$sizeLat,
+        esize            = input$esize,
+        asize            = input$asize,
+        intercepts       = FALSE,
+        thresholds       = FALSE,
+        label.cex        = input$labelCex,
+        edge.label.cex   = input$edgeLabelCex,
+        sizeMan2         = input$sizeMan2,
+        edge.width       = input$edgeWidth
       )
       dev.off()
     }
@@ -344,21 +345,437 @@ server <- function(input, output, session) {
       )
       
       incProgress(0.5, detail = "Generando gráfico")
-      bootPlot <- boot_cfa_plot(
-        results,
-        save              = FALSE,
-        dpi               = input$bootstrapDpi,
-        palette           = input$bootstrapPalette,
-        omega_ymin_annot  = input$omega_ymin_annot,
-        omega_ymax_annot  = input$omega_ymax_annot,
-        comp_ymin_annot   = input$comp_ymin_annot,
-        comp_ymax_annot   = input$comp_ymax_annot,
-        abs_ymin_annot    = input$abs_ymin_annot,
-        abs_ymax_annot    = input$abs_ymax_annot
-      )
+      
+      # Antes de llamar a boot_cfa_plot, verificamos que ggpubr esté disponible
+      if (!requireNamespace("ggpubr", quietly = TRUE)) {
+        showNotification(
+          "Paquete 'ggpubr' no está instalado: no se generará gráfico bootstrap.",
+          type = "error", duration = 5
+        )
+        bootResults$plot <- NULL
+      } else {
+        bootPlot <- boot_cfa_plot(
+          results,
+          save              = FALSE,
+          dpi               = input$bootstrapDpi,
+          palette           = input$bootstrapPalette,
+          omega_ymin_annot  = input$omega_ymin_annot,
+          omega_ymax_annot  = input$omega_ymax_annot,
+          comp_ymin_annot   = input$comp_ymin_annot,
+          comp_ymax_annot   = input$comp_ymax_annot,
+          abs_ymin_annot    = input$abs_ymin_annot,
+          abs_ymax_annot    = input$abs_ymax_annot
+        )
+        bootResults$plot <- bootPlot
+      }
       
       incProgress(0.3, detail = "Finalizando")
-      bootResults$plot    <- bootPlot
+      bootResults$results <- results
+    })
+  })
+  
+  output$bootstrapPlot <- renderPlot({
+    req(bootResults$plot)
+    bootResults$plot
+  })
+  
+  output$downloadBootstrapPlot <- downloadHandler(
+    filename = function() {
+      paste0("BootstrapPlot_", Sys.Date(), ".png")
+    },
+    content = function(file) {
+      req(bootResults$plot)
+      ggsave(
+        filename = file,
+        plot     = bootResults$plot,
+        device   = "png",
+        height   = 16,
+        width    = 22,
+        units    = "cm"
+      )
+    }
+  )
+  
+  output$bibReferences <- renderUI({
+    HTML(convert_bib_to_html(bibs))
+  })
+}
+
+# ——————————————————————————————————————————————————————————————
+# Ejecutar la aplicación
+shinyApp(ui, server)
+# app.R
+
+# ——————————————————————————————————————————————————————————————
+# (1) Establecer espejo CRAN por defecto
+options(repos = c(CRAN = "https://cran.rstudio.com"))
+
+# (2) Cargar SOLO las bibliotecas que deben estar instaladas en el servidor
+suppressPackageStartupMessages({
+  library(shiny)
+  library(shinydashboard)
+  library(lavaan)
+  library(semPlot)
+  library(semTools)
+  library(dplyr)
+  library(readxl)
+  library(sessioninfo)
+  library(bibtex)
+  library(PsyMetricTools)  # <- debe instalarse previamente (p.ej. via renv o admin)
+})
+
+# ——————————————————————————————————————————————————————————————
+# (3) Generar archivo de referencias en BibTeX
+si <- sessioninfo::session_info()
+attached_pkgs <- si$packages$package[si$packages$attached]
+bibtex::write.bib(attached_pkgs, file = "references.bib")
+bibs <- bibtex::read.bib("references.bib")
+
+convert_bib_to_html <- function(bibs) {
+  bib_char <- sapply(bibs, function(x) paste(format(x), collapse = " "))
+  bib_html  <- gsub("_(.*?)_",        "<em>\\1</em>",        bib_char)
+  bib_html  <- gsub("\\\\texttt\\{(.*?)\\}", "<code>\\1</code>", bib_html)
+  bib_html  <- paste0("<p>", bib_html, "</p>")
+  paste(bib_html, collapse = "\n")
+}
+
+# ——————————————————————————————————————————————————————————————
+# (4) Definir la interfaz de usuario (UI)
+ui <- dashboardPage(
+  dashboardHeader(title = "CFA Shiny"),
+  dashboardSidebar(
+    width = 300, collapsed = FALSE,
+    fileInput("datafile", "Load Excel File", accept = c(".xlsx")),
+    textAreaInput(
+      "modelInput", "CFA Model Specification",
+      value = "", placeholder = "Enter your CFA model specification", rows = 5
+    ),
+    textInput("invertItems",   "Items to Invert (comma-separated)", value = ""),
+    numericInput("numRespuestas", "Number of Responses", value = 4),
+    checkboxInput("comienzaConCero", "Starts with Zero", value = FALSE),
+    actionButton("run", "Run Analysis", class = "run-analysis"),
+    hr(),
+    sidebarMenu(
+      menuItem("Model Summary",        tabName = "summary",      icon = icon("clipboard")),
+      menuItem("Fit Measures",         tabName = "fitMeasures",  icon = icon("chart-line")),
+      menuItem("Model Plot",           tabName = "modelPlot",    icon = icon("project-diagram")),
+      menuItem("Modification Indices", tabName = "modIndices",   icon = icon("wrench")),
+      menuItem("Bootstrap CFA",        tabName = "bootstrap",    icon = icon("seedling")),
+      menuItem("Cómo citar",           tabName = "citation",     icon = icon("book"))
+    )
+  ),
+  dashboardBody(
+    tags$head(
+      tags$style(HTML("
+        /* =======================
+           COLORES DE LA CABECERA
+           ======================= */
+        .skin-blue .main-header .logo {
+          background-color: #446455;
+        }
+        .skin-blue .main-header .logo:hover {
+          background-color: #446455 !important;
+        }
+        .skin-blue .main-header .navbar {
+          background-color: #446455;
+        }
+        .skin-blue .main-header .navbar:hover {
+          background-color: #446455 !important;
+        }
+        /* ==========================
+           ICONO DE HAMBURGUESA
+           ========================== */
+        .skin-blue .main-header .navbar .sidebar-toggle {
+          background-color: #446455 !important;
+          border: none !important;
+        }
+        .skin-blue .main-header .navbar .sidebar-toggle:hover {
+          background-color: #446455 !important;
+        }
+        .skin-blue .main-header .navbar .sidebar-toggle .icon-bar {
+          background-color: #FFFFFF !important;
+        }
+        .skin-blue .main-header .navbar .sidebar-toggle:hover .icon-bar {
+          background-color: #FFFFFF !important;
+        }
+        /* ==========================
+           COLORES DEL SIDEBAR
+           ========================== */
+        .skin-blue .main-sidebar {
+          background-color: #5b5b5b;
+        }
+        /* ===========================================
+           BOTÓN 'Run Analysis' EN COLOR BLANCO
+           =========================================== */
+        .run-analysis {
+          background-color: #FFFFFF !important;
+          border-color:    #FFFFFF !important;
+          color:           #000000 !important;
+        }
+        .run-analysis:hover,
+        .run-analysis:focus,
+        .run-analysis:active {
+          background-color: #FFFFFF !important;
+          border-color:    #FFFFFF !important;
+          color:           #000000 !important;
+        }
+      "))
+    ),
+    tabItems(
+      tabItem(
+        tabName = "summary",
+        h2("Model Summary"),
+        uiOutput("modelWarning"),
+        verbatimTextOutput("summaryOutput")
+      ),
+      tabItem(
+        tabName = "fitMeasures",
+        h2("Fit Measures"),
+        tableOutput("fitMeasures")
+      ),
+      tabItem(
+        tabName = "modelPlot",
+        h2("Model Plot"),
+        fluidRow(
+          column(4,
+                 numericInput("rotation",     "Rotation",                value = 2,   step = 0.1),
+                 numericInput("curve",        "Curve",                   value = 2.5, step = 0.1),
+                 numericInput("sizeMan",      "Manifest Variable Size",  value = 5,   step = 0.1),
+                 numericInput("sizeMan2",     "Manifest Variable Size 2",value = 3,   step = 0.1),
+                 numericInput("sizeLat",      "Latent Variable Size",    value = 6,   step = 0.1),
+                 numericInput("esize",        "Label Size",              value = 2,   step = 0.1),
+                 numericInput("asize",        "Arrow Size",              value = 3,   step = 0.1),
+                 numericInput("labelCex",     "Text Size",               value = 1,   step = 0.1),
+                 numericInput("edgeLabelCex", "Edge Label Size",         value = 0.8, step = 0.1),
+                 numericInput("edgeWidth",    "Edge Width",              value = 0.5, step = 0.1)
+          ),
+          column(8,
+                 downloadButton("downloadPlot","Download High-Quality Plot", class = "btn-warning"),
+                 br(), br(),
+                 plotOutput("modelPlot")
+          )
+        )
+      ),
+      tabItem(
+        tabName = "modIndices",
+        h2("Modification Indices"),
+        tableOutput("modIndices")
+      ),
+      tabItem(
+        tabName = "bootstrap",
+        h2("Bootstrap CFA Analysis"),
+        fluidRow(
+          column(4,
+                 textInput("itemPrefix",       "Item Prefix",                  value = ""),
+                 numericInput("bootstrapSeed", "Seed",                         value = 2023),
+                 numericInput("nReplications", "Number of Replications",       value = 1000),
+                 numericInput("bootstrapDpi",  "DPI",                          value = 600),
+                 textInput("bootstrapPalette","Palette",                       value = "grey"),
+                 numericInput("omega_ymin_annot","Omega Y-min Annotation",    value = 0.67),
+                 numericInput("omega_ymax_annot","Omega Y-max Annotation",    value = 0.70),
+                 numericInput("comp_ymin_annot", "Composite Y-min Annotation", value = 0.90),
+                 numericInput("comp_ymax_annot", "Composite Y-max Annotation", value = 0.95),
+                 numericInput("abs_ymin_annot",  "Absolute Y-min Annotation",  value = 0.08),
+                 numericInput("abs_ymax_annot",  "Absolute Y-max Annotation",  value = 0.10),
+                 br(),
+                 actionButton("runBootstrap", "Run Bootstrap", class = "btn-primary")
+          ),
+          column(8,
+                 downloadButton("downloadBootstrapPlot", "Guardar Gráfico Bootstrap", class = "btn-warning"),
+                 br(), br(),
+                 plotOutput("bootstrapPlot")
+          )
+        )
+      ),
+      tabItem(
+        tabName = "citation",
+        h2("Cómo citar este Shiny"),
+        tags$blockquote(
+          "Ventura-León, J. (2025). ",
+          em("CFA Shiny"),
+          " [Aplicación Shiny]. https://github.com/jventural/CFA_Shiny_app"
+        ),
+        h3("Referencias utilizadas para construir la aplicación:"),
+        htmlOutput("bibReferences")
+      )
+    )
+  )
+)
+
+# ——————————————————————————————————————————————————————————————
+# (5) Definir el servidor (server)
+server <- function(input, output, session) {
+  
+  modelWarnings <- reactiveVal(character(0))
+  
+  data_processed <- reactive({
+    req(input$datafile)
+    raw_data <- read_excel(input$datafile$datapath) %>% na.omit()
+    
+    items_to_invert <- if (nzchar(input$invertItems)) {
+      trimws(unlist(strsplit(input$invertItems, split = ",")))
+    } else {
+      character(0)
+    }
+    
+    if (length(items_to_invert) > 0) {
+      invertir_items(
+        raw_data,
+        items = items_to_invert,
+        num_respuestas = input$numRespuestas,
+        comienza_con_cero = input$comienzaConCero
+      )
+    } else {
+      raw_data
+    }
+  })
+  
+  fit_initial <- eventReactive(input$run, {
+    req(input$modelInput)
+    warn_msgs <- character(0)
+    fit <- withCallingHandlers(
+      cfa(
+        input$modelInput,
+        data = data_processed(),
+        estimator = "WLSMV",
+        mimic = "Mplus",
+        ordered = TRUE
+      ),
+      warning = function(w) {
+        warn_msgs <<- c(warn_msgs, conditionMessage(w))
+        invokeRestart("muffleWarning")
+      }
+    )
+    modelWarnings(warn_msgs)
+    fit
+  })
+  
+  output$summaryOutput <- renderPrint({
+    req(fit_initial())
+    summary(
+      fit_initial(),
+      rsquare       = TRUE,
+      standardized  = TRUE,
+      fit.measures  = TRUE
+    )
+  })
+  
+  output$modelWarning <- renderUI({
+    msgs <- modelWarnings()
+    if (length(msgs) > 0) {
+      HTML(paste("<strong>Avisos del modelo:</strong><br>", paste(msgs, collapse = "<br>")))
+    }
+  })
+  
+  output$fitMeasures <- renderTable({
+    req(fit_initial())
+    fm <- fitMeasures(
+      fit_initial(),
+      c("chisq", "df", "pvalue",
+        "cfi.scaled", "tli.scaled",
+        "rmsea.scaled", "srmr")
+    )
+    df_fm <- data.frame(index = names(fm), value = fm)
+    row.names(df_fm) <- NULL
+    df_fm
+  }, rownames = FALSE)
+  
+  output$modelPlot <- renderPlot({
+    req(fit_initial())
+    semPaths(
+      fit_initial(),
+      whatLabels      = "std",
+      rotation        = input$rotation,
+      edge.color      = "grey32",
+      curve           = input$curve,
+      residuals       = FALSE,
+      sizeMan         = input$sizeMan,
+      sizeLat         = input$sizeLat,
+      esize           = input$esize,
+      asize           = input$asize,
+      intercepts      = FALSE,
+      thresholds      = FALSE,
+      label.cex       = input$labelCex,
+      edge.label.cex  = input$edgeLabelCex,
+      sizeMan2        = input$sizeMan2,
+      edge.width      = input$edgeWidth
+    )
+  })
+  
+  output$modIndices <- renderTable({
+    req(fit_initial())
+    modificationindices(fit_initial(), sort. = TRUE, power = TRUE)
+  }, rownames = TRUE)
+  
+  output$downloadPlot <- downloadHandler(
+    filename = function() {
+      paste0("ModelPlot_", Sys.Date(), ".png")
+    },
+    content = function(file) {
+      req(fit_initial())
+      png(file, width = 8, height = 6, units = "in", res = 600)
+      semPaths(
+        fit_initial(),
+        whatLabels       = "std",
+        rotation         = input$rotation,
+        edge.color       = "grey32",
+        curve            = input$curve,
+        residuals        = FALSE,
+        sizeMan          = input$sizeMan,
+        sizeLat          = input$sizeLat,
+        esize            = input$esize,
+        asize            = input$asize,
+        intercepts       = FALSE,
+        thresholds       = FALSE,
+        label.cex        = input$labelCex,
+        edge.label.cex   = input$edgeLabelCex,
+        sizeMan2         = input$sizeMan2,
+        edge.width       = input$edgeWidth
+      )
+      dev.off()
+    }
+  )
+  
+  bootResults <- reactiveValues(plot = NULL, results = NULL)
+  
+  observeEvent(input$runBootstrap, {
+    req(input$datafile, input$modelInput)
+    withProgress(message = "Ejecutando Bootstrap CFA...", value = 0, {
+      incProgress(0.2, detail = "Preparando datos")
+      results <- boot_cfa(
+        new_df         = data_processed(),
+        model_string   = input$modelInput,
+        item_prefix    = input$itemPrefix,
+        seed           = input$bootstrapSeed,
+        n_replications = input$nReplications
+      )
+      
+      incProgress(0.5, detail = "Generando gráfico")
+      
+      # Antes de llamar a boot_cfa_plot, verificamos que ggpubr esté disponible
+      if (!requireNamespace("ggpubr", quietly = TRUE)) {
+        showNotification(
+          "Paquete 'ggpubr' no está instalado: no se generará gráfico bootstrap.",
+          type = "error", duration = 5
+        )
+        bootResults$plot <- NULL
+      } else {
+        bootPlot <- boot_cfa_plot(
+          results,
+          save              = FALSE,
+          dpi               = input$bootstrapDpi,
+          palette           = input$bootstrapPalette,
+          omega_ymin_annot  = input$omega_ymin_annot,
+          omega_ymax_annot  = input$omega_ymax_annot,
+          comp_ymin_annot   = input$comp_ymin_annot,
+          comp_ymax_annot   = input$comp_ymax_annot,
+          abs_ymin_annot    = input$abs_ymin_annot,
+          abs_ymax_annot    = input$abs_ymax_annot
+        )
+        bootResults$plot <- bootPlot
+      }
+      
+      incProgress(0.3, detail = "Finalizando")
       bootResults$results <- results
     })
   })
