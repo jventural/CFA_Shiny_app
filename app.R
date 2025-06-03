@@ -10,7 +10,7 @@ library(PsyMetricTools)  # Funciones psicométricas (incluye invertir_items, boo
 library(readxl)          # Lectura de archivos Excel
 library(sessioninfo)     # Para extraer información de la sesión
 library(bibtex)          # Para gestionar referencias BibTeX
-
+library(ggpubr)
 # Generar el archivo de referencias con los paquetes adjuntos
 si <- sessioninfo::session_info()
 attached_pkgs <- si$packages$package[ si$packages$attached ]
