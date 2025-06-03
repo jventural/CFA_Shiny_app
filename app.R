@@ -1,5 +1,5 @@
 # app.R
-# Cargar paquetes requeridos
+# Cargar paquetes requeridos para el shiny
 library(shiny)
 library(shinydashboard)
 library(lavaan)          # Structural equation modeling
