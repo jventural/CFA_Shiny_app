@@ -1,47 +1,4 @@
 # app.R
-# Verificar e instalar paquetes si no están presentes
-
-# Debe devolver algo como ‘1.3.2’ o superior
-# Al inicio del app.R:
-# 0) Definir el mirror CRAN (fundamental en entornos no interactivos como Connect)
-options(repos = c(CRAN = "https://cran.rstudio.com"))
-
-# 1) Verificar que 'promises' sea >= 1.3.2
-if (packageVersion("promises") < "1.3.2") {
-  install.packages("promises", dependencies = TRUE)
-  # Tras instalar, forzar reinicio para que se cargue la nueva versión:
-  stop("El paquete 'promises' se actualizó. Reinicia la aplicación.")
-}
-
-# 2) Lista de paquetes necesarios en CRAN
-paquetes_necesarios <- c(
-  "shiny", "shinydashboard", "lavaan", "semPlot", "semTools", "dplyr", "ggpubr",
-  "readxl", "sessioninfo", "bibtex"
-)
-
-paquetes_faltantes <- paquetes_necesarios[!(paquetes_necesarios %in% installed.packages()[, "Package"])]
-if (length(paquetes_faltantes) > 0) {
-  install.packages(paquetes_faltantes, dependencies = TRUE)
-}
-
-
-
-# Instalar devtools si no está instalado
-if (!require("devtools", quietly = TRUE)) {
-  install.packages("devtools")
-  library(devtools)
-}
-
-# Instalar condicionalmente PsyMetricTools desde GitHub si no está instalado
-if (!require("PsyMetricTools", quietly = TRUE)) {
-  devtools::install_github("jventural/PsyMetricTools")
-}
-
-# Instalar condicionalmente BayesPsyMetrics desde GitHub si no está instalado
-if (!require("BayesPsyMetrics", quietly = TRUE)) {
-  devtools::install_github("jventural/BayesPsyMetrics")
-}
-
 # Cargar paquetes requeridos
 library(shiny)
 library(shinydashboard)
