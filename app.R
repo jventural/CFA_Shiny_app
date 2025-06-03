@@ -8,9 +8,9 @@ library(semTools)        # SEM analysis tools and reliability
 library(dplyr)           # Data manipulation
 library(PsyMetricTools)  # Funciones psicométricas (incluye invertir_items, boot_cfa, boot_cfa_plot)
 library(readxl)          # Lectura de archivos Excel
+library(ggplot2)         # For ggsave when downloading plots
 library(sessioninfo)     # Para extraer información de la sesión
 library(bibtex)          # Para gestionar referencias BibTeX
-library(ggpubr)
 # Generar el archivo de referencias con los paquetes adjuntos
 si <- sessioninfo::session_info()
 attached_pkgs <- si$packages$package[ si$packages$attached ]
@@ -295,7 +295,7 @@ server <- function(input, output, session) {
   # Modification Indices
   output$modIndices <- renderTable({
     req(fit_initial())
-    modificationindices(fit_initial(), sort. = TRUE, power = TRUE)
+    modindices(fit_initial(), sort. = TRUE, power = TRUE)
   }, rownames = TRUE)
   
   # Descargar el Model Plot en alta calidad (600 dpi)
