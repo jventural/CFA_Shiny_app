@@ -468,7 +468,7 @@ ui <- dashboardPage(
           column(8,
                  downloadButton("downloadBootstrapPlot", "Guardar Gráfico Bootstrap", class = "btn-warning"),
                  br(), br(),
-                 plotOutput("bootstrapPlot")
+                 plotOutput("bootstrapPlot", width  = "100%", height = "600px")
           )
         )
       ),
