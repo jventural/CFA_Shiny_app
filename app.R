@@ -27,6 +27,7 @@ suppressPackageStartupMessages({
   library(gtable)
   library(purrr)
   library(reshape2)
+  library(wesanderson)    # <---- ya instalado dentro de renv
 })
 
 # ——————————————————————————————————————————————————————————————
