@@ -9,7 +9,7 @@ if (file.exists("renv/activate.R")) {
 # 2) Establecer espejo CRAN por defecto
 options(repos = c(CRAN = "https://cran.rstudio.com"))
 
-# 3) Cargar todas las bibliotecas necesarias (sin ggpubr ni wesanderson)
+# 3) Cargar todas las bibliotecas necesarias (sin ggpubr, wesanderson ni patchwork)
 suppressPackageStartupMessages({
   library(shiny)
   library(shinydashboard)
@@ -23,15 +23,14 @@ suppressPackageStartupMessages({
   library(PsyMetricTools)
   library(ggplot2)
   library(tidyr)
-  library(gridExtra)
+  library(gridExtra)   # para grid.arrange
   library(gtable)
   library(purrr)
   library(reshape2)
-  library(patchwork)     # Para combinar paneles de ggplot
 })
 
 # ——————————————————————————————————————————————————————————————
-# 4) Función boot_cfa_plot SIN llamar a library(wesanderson)
+# 4) Función boot_cfa_plot SIN llamar a library(wesanderson) ni patchwork
 boot_cfa_plot <- function(df,
                           save = TRUE,
                           path = "Plot_boot_cfa.jpg",
@@ -46,14 +45,14 @@ boot_cfa_plot <- function(df,
                           ...) {
   suppressWarnings({
     #============================================================
-    # 0. Cargamos únicamente lo imprescindible para boot_cfa_plot
-    #    (¡NO hay library(wesanderson) aquí!)
+    # 0. Cargamos únicamente lo imprescindible (¡NO hay wesanderson ni patchwork!)
     library(ggplot2)
     library(tidyr)
     library(dplyr)
     library(purrr)
     library(reshape2)
-    library(patchwork)
+    library(gridExtra)
+    library(gtable)
     
     #------------------------------------------------------------
     # 1. Paleta de colores: usa wesanderson SOLO si está instalado
@@ -268,15 +267,18 @@ boot_cfa_plot <- function(df,
     }
     
     #------------------------------------------------------------
-    # 8. Ensamblar y guardar
+    # 8. Ensamblar y guardar usando grid.arrange (NO patchwork)
     #------------------------------------------------------------
     o <- plot_and_table_omega(df, omega_ymin_annot, omega_ymax_annot, palette)
     c <- plot_and_table_comp(df, comp_ymin_annot, comp_ymax_annot, palette)
     a <- plot_and_table_abs(df, abs_ymin_annot, abs_ymax_annot, palette)
     
-    combined <- (o$plot | c$plot | a$plot) +
-      plot_layout(ncol = 3) +
-      plot_annotation(title = "Bootstrap CFA Results")
+    combined <- gridExtra::grid.arrange(
+      o$plot, c$plot, a$plot,
+      ncol = 3,
+      top = grid::textGrob("Bootstrap CFA Results",
+                           gp = grid::gpar(fontsize = 16, fontface = "bold"))
+    )
     
     if (save) {
       ggsave(
@@ -647,7 +649,7 @@ server <- function(input, output, session) {
       )
       
       incProgress(0.5, detail = "Generando gráfico")
-      # Aquí llamamos a la versión actualizada de boot_cfa_plot
+      # Llamar a la versión actualizada de boot_cfa_plot
       bootPlot <- boot_cfa_plot(
         results,
         save              = FALSE,
