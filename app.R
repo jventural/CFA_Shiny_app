@@ -30,7 +30,7 @@ suppressPackageStartupMessages({
 })
 
 # ——————————————————————————————————————————————————————————————
-# 4) Función boot_cfa_plot SIN llamar a library(wesanderson) ni patchwork
+# 4) Función boot_cfa_plot (sin depender de wesanderson/patchwork)
 boot_cfa_plot <- function(df,
                           save = TRUE,
                           path = "Plot_boot_cfa.jpg",
@@ -44,8 +44,7 @@ boot_cfa_plot <- function(df,
                           palette = "grey",
                           ...) {
   suppressWarnings({
-    #============================================================
-    # 0. Cargamos únicamente lo imprescindible (¡NO hay wesanderson ni patchwork!)
+    # 0. Cargamos solo lo imprescindible (¡no wesanderson, no patchwork!)
     library(ggplot2)
     library(tidyr)
     library(dplyr)
@@ -55,7 +54,7 @@ boot_cfa_plot <- function(df,
     library(gtable)
     
     #------------------------------------------------------------
-    # 1. Paleta de colores: usa wesanderson SOLO si está instalado
+    # 1. Paleta de colores: usa wesanderson si existe, sino gris o rep(pal, n)
     #------------------------------------------------------------
     get_palette <- function(pal, n) {
       if (requireNamespace("wesanderson", quietly = TRUE) &&
@@ -69,7 +68,7 @@ boot_cfa_plot <- function(df,
     }
     
     #------------------------------------------------------------
-    # 2. Color encabezado de tablas
+    # 2. Color de encabezado de tablas
     #------------------------------------------------------------
     get_header_color <- function(pal) {
       if (identical(pal, "grey")) {
@@ -83,7 +82,7 @@ boot_cfa_plot <- function(df,
     }
     
     #------------------------------------------------------------
-    # 3. Bordes horizontales en tablas
+    # 3. Función para agregar bordes horizontales a un gtable
     #------------------------------------------------------------
     add_horizontal_borders <- function(tbl) {
       tbl <- gtable::gtable_add_grob(tbl,
@@ -114,7 +113,7 @@ boot_cfa_plot <- function(df,
     }
     
     #------------------------------------------------------------
-    # 4. Tema de tabla
+    # 4. Tema de tabla para grid.arrange
     #------------------------------------------------------------
     make_table_theme <- function(pal) {
       gridExtra::ttheme_default(
@@ -267,23 +266,25 @@ boot_cfa_plot <- function(df,
     }
     
     #------------------------------------------------------------
-    # 8. Ensamblar y guardar usando grid.arrange (NO patchwork)
+    # 8. Ensamblar y dibujar con grid.arrange (sin patchwork)
     #------------------------------------------------------------
     o <- plot_and_table_omega(df, omega_ymin_annot, omega_ymax_annot, palette)
     c <- plot_and_table_comp(df, comp_ymin_annot, comp_ymax_annot, palette)
     a <- plot_and_table_abs(df, abs_ymin_annot, abs_ymax_annot, palette)
     
-    combined <- gridExtra::grid.arrange(
+    # grid.arrange dibuja directamente en el dispositivo gráfico
+    gridExtra::grid.arrange(
       o$plot, c$plot, a$plot,
       ncol = 3,
       top = grid::textGrob("Bootstrap CFA Results",
                            gp = grid::gpar(fontsize = 16, fontface = "bold"))
     )
     
-    if (save) {
+    # Si el usuario pidió guardar en disco, lo hacemos aquí:
+    if (isTRUE(save)) {
       ggsave(
         filename = path,
-        plot     = combined,
+        plot     = gridExtra::arrangeGrob(o$plot, c$plot, a$plot, ncol = 3),
         height   = 16,
         width    = 22,
         dpi      = dpi,
@@ -291,10 +292,9 @@ boot_cfa_plot <- function(df,
         ...
       )
     }
-    
-    combined
   })
 }
+
 
 # ——————————————————————————————————————————————————————————————
 # 5) Generar archivo de referencias en BibTeX
@@ -431,7 +431,7 @@ ui <- dashboardPage(
                  numericInput("edgeWidth",    "Edge Width",              value = 0.5, step = 0.1)
           ),
           column(8,
-                 downloadButton("downloadPlot","Download High-Quality Plot", class = "btn-warning"),
+                 downloadButton("downloadPlot", "Download High-Quality Plot", class = "btn-warning"),
                  br(), br(),
                  plotOutput("modelPlot")
           )
@@ -495,6 +495,9 @@ server <- function(input, output, session) {
   
   # Reactiva para guardar avisos del modelo CFA
   modelWarnings <- reactiveVal(character(0))
+  
+  # Reactiva para almacenar solo los resultados del bootstrap
+  bootResults <- reactiveValues(results = NULL)
   
   # Leer, limpiar datos y aplicar inversión de ítems si corresponde
   data_processed <- reactive({
@@ -602,7 +605,7 @@ server <- function(input, output, session) {
     modificationindices(fit_initial(), sort. = TRUE, power = TRUE)
   }, rownames = TRUE)
   
-  # Descargar Model Plot
+  # Descargar el Model Plot
   output$downloadPlot <- downloadHandler(
     filename = function() {
       paste0("ModelPlot_", Sys.Date(), ".png")
@@ -632,27 +635,56 @@ server <- function(input, output, session) {
     }
   )
   
-  # ReactiveValues para resultados de Bootstrap
-  bootResults <- reactiveValues(plot = NULL, results = NULL)
-  
-  # Ejecutar Bootstrap CFA
+  # Ejecutar solo la parte de cálculo bootstrap cuando se presione el botón
   observeEvent(input$runBootstrap, {
-    req(input$datafile, input$modelInput)
+    req(data_processed(), fit_initial(), input$modelInput)
+    
     withProgress(message = "Ejecutando Bootstrap CFA...", value = 0, {
       incProgress(0.2, detail = "Preparando datos")
-      results <- boot_cfa(
+      # Guardamos únicamente los resultados en bootResults$results
+      bootResults$results <- boot_cfa(
         new_df         = data_processed(),
         model_string   = input$modelInput,
         item_prefix    = input$itemPrefix,
         seed           = input$bootstrapSeed,
         n_replications = input$nReplications
       )
-      
-      incProgress(0.5, detail = "Generando gráfico")
-      # Llamar a la versión actualizada de boot_cfa_plot
-      bootPlot <- boot_cfa_plot(
-        results,
-        save              = FALSE,
+    })
+  })
+  
+  # Renderizar el gráfico de Bootstrap **dentro** de renderPlot
+  output$bootstrapPlot <- renderPlot({
+    req(bootResults$results)
+    
+    # Llamamos a boot_cfa_plot() aquí, dentro de renderPlot, para que grid.arrange
+    # dibuje realmente en el dispositivo de Shiny. Si bootResults$results aún es NULL,
+    # esto no se ejecutará.
+    boot_cfa_plot(
+      bootResults$results,
+      save              = FALSE,
+      dpi               = input$bootstrapDpi,
+      palette           = input$bootstrapPalette,
+      omega_ymin_annot  = input$omega_ymin_annot,
+      omega_ymax_annot  = input$omega_ymax_annot,
+      comp_ymin_annot   = input$comp_ymin_annot,
+      comp_ymax_annot   = input$comp_ymax_annot,
+      abs_ymin_annot    = input$abs_ymin_annot,
+      abs_ymax_annot    = input$abs_ymax_annot
+    )
+  })
+  
+  # Descargar el gráfico de Bootstrap
+  output$downloadBootstrapPlot <- downloadHandler(
+    filename = function() {
+      paste0("BootstrapPlot_", Sys.Date(), ".png")
+    },
+    content = function(file) {
+      req(bootResults$results)
+      # Para guardar, podemos volver a llamar a boot_cfa_plot() pero indicando save=TRUE
+      boot_cfa_plot(
+        bootResults$results,
+        save              = TRUE,
+        path              = file,
         dpi               = input$bootstrapDpi,
         palette           = input$bootstrapPalette,
         omega_ymin_annot  = input$omega_ymin_annot,
@@ -661,34 +693,6 @@ server <- function(input, output, session) {
         comp_ymax_annot   = input$comp_ymax_annot,
         abs_ymin_annot    = input$abs_ymin_annot,
         abs_ymax_annot    = input$abs_ymax_annot
-      )
-      
-      incProgress(0.3, detail = "Finalizando")
-      bootResults$plot    <- bootPlot
-      bootResults$results <- results
-    })
-  })
-  
-  # Renderizar gráfico de Bootstrap
-  output$bootstrapPlot <- renderPlot({
-    req(bootResults$plot)
-    bootResults$plot
-  })
-  
-  # Descargar gráfico de Bootstrap
-  output$downloadBootstrapPlot <- downloadHandler(
-    filename = function() {
-      paste0("BootstrapPlot_", Sys.Date(), ".png")
-    },
-    content = function(file) {
-      req(bootResults$plot)
-      ggsave(
-        filename = file,
-        plot     = bootResults$plot,
-        device   = "png",
-        height   = 16,
-        width    = 22,
-        units    = "cm"
       )
     }
   )
