@@ -1,15 +1,15 @@
 # app.R
 
-# 0) Activar renv si existe (para que Posit Connect use tu biblioteca local)
+# ——————————————————————————————————————————————————————————————
+# 1) Activar renv para que Posit Connect use las librerías de renv/library
 if (file.exists("renv/activate.R")) {
   source("renv/activate.R")
 }
 
-# ——————————————————————————————————————————————————————————————
-# 1) Establecer espejo CRAN por defecto
+# 2) Establecer espejo CRAN por defecto
 options(repos = c(CRAN = "https://cran.rstudio.com"))
 
-# 2) Cargar todas las librerías necesarias (sin ggpubr)
+# 3) Cargar todas las bibliotecas necesarias (sin ggpubr ni wesanderson)
 suppressPackageStartupMessages({
   library(shiny)
   library(shinydashboard)
@@ -20,17 +20,18 @@ suppressPackageStartupMessages({
   library(readxl)
   library(sessioninfo)
   library(bibtex)
-  library(PsyMetricTools)   # Ya actualizado para no requerir ggpubr
-  library(ggplot2)          # Necesario para semPlot y gráficos
+  library(PsyMetricTools)
+  library(ggplot2)
   library(tidyr)
   library(gridExtra)
   library(gtable)
   library(purrr)
   library(reshape2)
+  library(patchwork)     # Para combinar paneles de ggplot
 })
 
 # ——————————————————————————————————————————————————————————————
-# 3) Definir localmente boot_cfa_plot() SIN usar ggpubr
+# 4) Función boot_cfa_plot SIN llamar a library(wesanderson)
 boot_cfa_plot <- function(df,
                           save = TRUE,
                           path = "Plot_boot_cfa.jpg",
@@ -44,40 +45,47 @@ boot_cfa_plot <- function(df,
                           palette = "grey",
                           ...) {
   suppressWarnings({
-    #------------------------------------------------------------
-    # 0. Nos aseguramos de cargar solo librerías que sí tenemos
+    #============================================================
+    # 0. Cargamos únicamente lo imprescindible para boot_cfa_plot
+    #    (¡NO hay library(wesanderson) aquí!)
     library(ggplot2)
     library(tidyr)
     library(dplyr)
-    library(wesanderson)
     library(purrr)
     library(reshape2)
     library(patchwork)
-    # (¡NO hay library(ggpubr) aquí!)
     
     #------------------------------------------------------------
-    # 1. Funciones auxiliares para paleta y tablas
+    # 1. Paleta de colores: usa wesanderson SOLO si está instalado
     #------------------------------------------------------------
     get_palette <- function(pal, n) {
-      if (pal %in% names(wesanderson::wes_palettes)) {
+      if (requireNamespace("wesanderson", quietly = TRUE) &&
+          pal %in% names(wesanderson::wes_palettes)) {
         wesanderson::wes_palette(pal, n, type = "discrete")
-      } else if (pal == "grey") {
+      } else if (identical(pal, "grey")) {
         gray.colors(n, start = 0.5, end = 0.9)
       } else {
         rep(pal, n)
       }
     }
     
+    #------------------------------------------------------------
+    # 2. Color encabezado de tablas
+    #------------------------------------------------------------
     get_header_color <- function(pal) {
-      if (pal == "grey") {
+      if (identical(pal, "grey")) {
         "grey85"
-      } else if (pal %in% names(wesanderson::wes_palettes)) {
+      } else if (requireNamespace("wesanderson", quietly = TRUE) &&
+                 pal %in% names(wesanderson::wes_palettes)) {
         wesanderson::wes_palette(pal, 1, type = "discrete")
       } else {
         pal
       }
     }
     
+    #------------------------------------------------------------
+    # 3. Bordes horizontales en tablas
+    #------------------------------------------------------------
     add_horizontal_borders <- function(tbl) {
       tbl <- gtable::gtable_add_grob(tbl,
                                      grobs = grid::segmentsGrob(
@@ -106,6 +114,9 @@ boot_cfa_plot <- function(df,
       tbl
     }
     
+    #------------------------------------------------------------
+    # 4. Tema de tabla
+    #------------------------------------------------------------
     make_table_theme <- function(pal) {
       gridExtra::ttheme_default(
         core = list(bg_params = list(fill = "white", col = NA),
@@ -118,7 +129,7 @@ boot_cfa_plot <- function(df,
     }
     
     #------------------------------------------------------------
-    # 2. Panel A: Omega (fiabilidad)
+    # 5. Panel A: Omega (fiabilidad)
     #------------------------------------------------------------
     plot_and_table_omega <- function(df_repli, ymin_ann, ymax_ann, pal) {
       if ("fit_measures1" %in% names(df_repli)) {
@@ -166,7 +177,7 @@ boot_cfa_plot <- function(df,
     }
     
     #------------------------------------------------------------
-    # 3. Panel B: CFI / TLI
+    # 6. Panel B: CFI / TLI
     #------------------------------------------------------------
     plot_and_table_comp <- function(df_repli, ymin_ann, ymax_ann, pal) {
       dfm <- map_dfr(df_repli$fit_measures1, as_tibble)
@@ -212,7 +223,7 @@ boot_cfa_plot <- function(df,
     }
     
     #------------------------------------------------------------
-    # 4. Panel C: RMSEA / SRMR / CRMR
+    # 7. Panel C: RMSEA / SRMR / CRMR
     #------------------------------------------------------------
     plot_and_table_abs <- function(df_repli, ymin_ann, ymax_ann, pal) {
       dfm <- map_dfr(df_repli$fit_measures1, as_tibble)
@@ -257,7 +268,7 @@ boot_cfa_plot <- function(df,
     }
     
     #------------------------------------------------------------
-    # 5. Generar y combinar los tres paneles
+    # 8. Ensamblar y guardar
     #------------------------------------------------------------
     o <- plot_and_table_omega(df, omega_ymin_annot, omega_ymax_annot, palette)
     c <- plot_and_table_comp(df, comp_ymin_annot, comp_ymax_annot, palette)
@@ -284,7 +295,22 @@ boot_cfa_plot <- function(df,
 }
 
 # ——————————————————————————————————————————————————————————————
-# 4) Definir la interfaz de usuario (UI)
+# 5) Generar archivo de referencias en BibTeX
+si <- sessioninfo::session_info()
+attached_pkgs <- si$packages$package[si$packages$attached]
+bibtex::write.bib(attached_pkgs, file = "references.bib")
+bibs <- bibtex::read.bib("references.bib")
+
+convert_bib_to_html <- function(bibs) {
+  bib_char <- sapply(bibs, function(x) paste(format(x), collapse = " "))
+  bib_html <- gsub("_(.*?)_", "<em>\\1</em>", bib_char)
+  bib_html <- gsub("\\\\texttt\\{(.*?)\\}", "<code>\\1</code>", bib_html)
+  bib_html <- paste0("<p>", bib_html, "</p>")
+  paste(bib_html, collapse = "\n")
+}
+
+# ——————————————————————————————————————————————————————————————
+# 6) Definir la interfaz de usuario (UI)
 ui <- dashboardPage(
   dashboardHeader(title = "CFA Shiny"),
   dashboardSidebar(
@@ -427,7 +453,7 @@ ui <- dashboardPage(
                  numericInput("bootstrapSeed", "Seed",                         value = 2023),
                  numericInput("nReplications", "Number of Replications",       value = 1000),
                  numericInput("bootstrapDpi",  "DPI",                          value = 600),
-                 textInput("bootstrapPalette", "Palette",                      value = "grey"),
+                 textInput("bootstrapPalette","Palette",                       value = "grey"),
                  numericInput("omega_ymin_annot","Omega Y-min Annotation",    value = 0.67),
                  numericInput("omega_ymax_annot","Omega Y-max Annotation",    value = 0.70),
                  numericInput("comp_ymin_annot", "Composite Y-min Annotation", value = 0.90),
@@ -462,13 +488,13 @@ ui <- dashboardPage(
 )
 
 # ——————————————————————————————————————————————————————————————
-# 5) Definir servidor
+# 7) Definir servidor (server)
 server <- function(input, output, session) {
   
-  # Reactiva para guardar avisos del CFA
+  # Reactiva para guardar avisos del modelo CFA
   modelWarnings <- reactiveVal(character(0))
   
-  # Leer y procesar datos (invirtiendo ítems si se pidió)
+  # Leer, limpiar datos y aplicar inversión de ítems si corresponde
   data_processed <- reactive({
     req(input$datafile)
     raw_data <- read_excel(input$datafile$datapath) %>% na.omit()
@@ -491,7 +517,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # Ajustar CFA capturando warnings
+  # Ajustar modelo CFA capturando warnings
   fit_initial <- eventReactive(input$run, {
     req(input$modelInput)
     warn_msgs <- character(0)
@@ -512,7 +538,7 @@ server <- function(input, output, session) {
     fit
   })
   
-  # Renderizar resumen CFA
+  # Renderizar resumen del modelo
   output$summaryOutput <- renderPrint({
     req(fit_initial())
     summary(
@@ -523,7 +549,7 @@ server <- function(input, output, session) {
     )
   })
   
-  # Renderizar avisos (warnings)
+  # Renderizar avisos del modelo
   output$modelWarning <- renderUI({
     msgs <- modelWarnings()
     if (length(msgs) > 0) {
@@ -531,7 +557,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # Fit Measures en tabla
+  # Fit Measures
   output$fitMeasures <- renderTable({
     req(fit_initial())
     fm <- fitMeasures(
@@ -545,7 +571,7 @@ server <- function(input, output, session) {
     df_fm
   }, rownames = FALSE)
   
-  # SemPlot del modelo
+  # Model Plot
   output$modelPlot <- renderPlot({
     req(fit_initial())
     semPaths(
@@ -568,13 +594,13 @@ server <- function(input, output, session) {
     )
   })
   
-  # Modification Indices en tabla
+  # Modification Indices
   output$modIndices <- renderTable({
     req(fit_initial())
     modificationindices(fit_initial(), sort. = TRUE, power = TRUE)
   }, rownames = TRUE)
   
-  # Descargar SemPlot
+  # Descargar Model Plot
   output$downloadPlot <- downloadHandler(
     filename = function() {
       paste0("ModelPlot_", Sys.Date(), ".png")
@@ -621,7 +647,7 @@ server <- function(input, output, session) {
       )
       
       incProgress(0.5, detail = "Generando gráfico")
-      # Llamamos a nuestra propia boot_cfa_plot (ya no usa ggpubr)
+      # Aquí llamamos a la versión actualizada de boot_cfa_plot
       bootPlot <- boot_cfa_plot(
         results,
         save              = FALSE,
@@ -672,5 +698,5 @@ server <- function(input, output, session) {
 }
 
 # ——————————————————————————————————————————————————————————————
-# 6) Ejecutar la aplicación Shiny
+# 8) Ejecutar la aplicación Shiny
 shinyApp(ui, server)
