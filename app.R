@@ -1,5 +1,10 @@
 # app.R
 
+# 0) Activar renv si existe (para que Posit Connect use tu biblioteca local)
+if (file.exists("renv/activate.R")) {
+  source("renv/activate.R")
+}
+
 # ——————————————————————————————————————————————————————————————
 # 1) Establecer espejo CRAN por defecto
 options(repos = c(CRAN = "https://cran.rstudio.com"))
@@ -22,7 +27,6 @@ suppressPackageStartupMessages({
   library(gtable)
   library(purrr)
   library(reshape2)
-  library(patchwork)        # Para combinar paneles en un solo ggplot
 })
 
 # ——————————————————————————————————————————————————————————————
