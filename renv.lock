@@ -374,7 +374,7 @@
       "RemoteUsername": "jventural",
       "RemoteRepo": "PsyMetricTools",
       "RemoteRef": "master",
-      "RemoteSha": "2dc03613839d42efd6216c6d0fa49ce94bc3e789"
+      "RemoteSha": "03a486171984bc701b6dc26ff42609095b15ab59"
     },
     "R6": {
       "Package": "R6",
