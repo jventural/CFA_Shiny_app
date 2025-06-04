@@ -20,7 +20,6 @@ suppressPackageStartupMessages({
   library(tidyr)
   library(gridExtra)
   library(gtable)
-  library(wesanderson)
   library(purrr)
   library(reshape2)
   library(patchwork)        # Para combinar paneles en un solo ggplot
